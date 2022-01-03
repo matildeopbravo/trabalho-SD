@@ -1,22 +1,17 @@
 package sd.server;
 
 import sd.client.ClientUser;
-import sd.client.Operation;
-import sd.exceptions.UserJaExisteException;
 
-import javax.xml.crypto.Data;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.spi.CalendarDataProvider;
 
-public class Server implements  Runnable{
+public class Server {
     private ServerSocket serverSocket;
     // username -> info
     private static HashMap<String, ServerUser> users;
@@ -38,24 +33,21 @@ public class Server implements  Runnable{
         reservas = new HashMap<>();
     }
 
-    @Override
-    public void run() {
-        while(true) {
+    public void start() {
+        while(!serverSocket.isClosed()) {
             try {
                 Socket s = serverSocket.accept();
-                DataInputStream in = new DataInputStream(s.getInputStream());
-                DataOutputStream out = new DataOutputStream(s.getOutputStream());
-                try {
-                    Operation op = Operation.values()[in.readInt()];
-                    op.callHandleMethod(in, out);
-                }
-                catch (ArrayIndexOutOfBoundsException e ) {
-                    Reply.InvalidFormat.serialize(out);
-                }
+                new Thread(new Worker(s)).start();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+    private boolean isAuthenticated(Socket s) {
+        String address = s.getInetAddress().getHostAddress();
+        // TODO
+        return true;
+
     }
 
     public static void registaUser(DataInputStream in, DataOutputStream out) {
@@ -74,7 +66,7 @@ public class Server implements  Runnable{
         }
     }
 
-    public static void autenticaUser(DataInputStream in, DataOutputStream out) {
+    public static ServerUser autenticaUser(DataInputStream in, DataOutputStream out) {
         try {
             ClientUser clientUser = ClientUser.deserialize(in);
             ServerUser serverUser = users.get(clientUser.getUserName());
@@ -85,22 +77,30 @@ public class Server implements  Runnable{
         } catch (IOException e) {
             Reply.Failure.serialize(out);
         }
+        return null;
     }
     public static void efetuaReserva(DataInputStream in, DataOutputStream out) {
+        try {
+            Reserva r = Reserva.deserialize(in);
+            // criar a reserva e responder
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
-    public static void mudaOrigem(DataInputStream in, DataOutputStream out) {
 
+    public static void mudaOrigem(DataInputStream in, DataOutputStream out) {
+        // TODO
     }
 
     public static void mudaDestino(DataInputStream in, DataOutputStream out) {
-
+        // TODO
     }
     public static void mudaCapacidade(DataInputStream in, DataOutputStream out) {
-
+        // TODO
     }
     public static void encerraDia(DataInputStream in, DataOutputStream out) {
-
+        // TODO
     }
     public static void listaVoos(DataInputStream in, DataOutputStream out) {
 

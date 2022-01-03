@@ -1,5 +1,6 @@
 package sd.server;
 
+import sd.Connection;
 import sd.client.ClientUser;
 
 import java.io.DataInputStream;
@@ -7,9 +8,7 @@ import java.io.DataOutputStream;
 
 public class ServerUser {
     private final ClientUser user;
-    private boolean isAuthenticated = false;
-    private DataOutputStream out;
-    private DataInputStream in;
+    private Connection connection;
     private final boolean isAdmin ;
 
     // se for criado pelo cliente nao pode ser admin
@@ -23,21 +22,36 @@ public class ServerUser {
         this.isAdmin = isAdmin;
     }
 
-    public void setStreams(DataInputStream in, DataOutputStream out) {
-        this.in = in;
-        this.out = out;
+    public static ServerUser deserialize() {
+        //TODO
+        return null;
     }
 
+    public void createConnection(DataInputStream in, DataOutputStream out) {
+        this.connection = new Connection(in,out);
+    }
 
     public String getUserName() {
         return user.getUserName();
     }
 
-    public void setIsAuthenticated(boolean isAuthenticated) {
-        this.isAuthenticated = isAuthenticated;
-    }
-
     public String getPassword() {
         return user.getPassword();
+    }
+
+    public void serialize(DataOutputStream out) {
+        // TODO
+    }
+
+    public void setIsAuthenticated(boolean b) {
+        // TODO
+    }
+
+    public void setStreams(DataInputStream in, DataOutputStream out) {
+        // TODO
+    }
+
+    public boolean isAdmin(){
+        return isAdmin;
     }
 }
