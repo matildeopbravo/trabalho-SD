@@ -22,17 +22,17 @@ public enum Operation {
     Encerramento(Server::encerraDia),
     ListaVoos(Server::listaVoos);
 
-    private BiConsumer<DataInputStream, Socket> action;
+    private BiConsumer<DataInputStream, DataOutputStream> action;
 
-    Operation(BiConsumer<DataInputStream, Socket> registaUser) {
-        this.action = registaUser;
+    Operation(BiConsumer<DataInputStream, DataOutputStream> action) {
+        this.action = action;
     }
 
     public void serialize(DataOutputStream output) throws IOException {
         output.writeInt(this.ordinal());
     }
 
-    public void callHandleMethod(DataInputStream d, Socket s) {
-        this.action.accept(d,s);
+    public void callHandleMethod(DataInputStream in,  DataOutputStream out) {
+        this.action.accept(in,out);
     }
 }

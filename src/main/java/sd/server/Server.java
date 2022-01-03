@@ -14,6 +14,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.spi.CalendarDataProvider;
 
 public class Server implements  Runnable{
     private ServerSocket serverSocket;
@@ -46,7 +47,7 @@ public class Server implements  Runnable{
                 DataOutputStream out = new DataOutputStream(s.getOutputStream());
                 try {
                     Operation op = Operation.values()[in.readInt()];
-                    op.callHandleMethod(in, s);
+                    op.callHandleMethod(in, out);
                 }
                 catch (ArrayIndexOutOfBoundsException e ) {
                     Reply.InvalidFormat.serialize(out);
@@ -57,22 +58,13 @@ public class Server implements  Runnable{
         }
     }
 
-    public static void registaUser(DataInputStream in, Socket s) {
-        DataOutputStream out;
-        try {
-            OutputStream os = s.getOutputStream();
-            out = new DataOutputStream(os);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
+    public static void registaUser(DataInputStream in, DataOutputStream out) {
         try {
             ClientUser us = ClientUser.deserialize(in);
             if(users.containsKey(us.getUserName()))
                 Reply.Failure.serialize(out);
             else {
-                ServerUser su = new ServerUser(us,s);
+                ServerUser su = new ServerUser(us);
                 users.put(su.getUserName(),su);
                 Reply.Success.serialize(out);
             }
@@ -82,27 +74,35 @@ public class Server implements  Runnable{
         }
     }
 
-    public static void autenticaUser(DataInputStream in, Socket s) {
-        // associa socket ao user
+    public static void autenticaUser(DataInputStream in, DataOutputStream out) {
+        try {
+            ClientUser clientUser = ClientUser.deserialize(in);
+            ServerUser serverUser = users.get(clientUser.getUserName());
+            if(serverUser != null && serverUser.getPassword().equals(clientUser.getPassword())) {
+                serverUser.setIsAuthenticated(true);
+                serverUser.setStreams(in,out);
+            }
+        } catch (IOException e) {
+            Reply.Failure.serialize(out);
+        }
+    }
+    public static void efetuaReserva(DataInputStream in, DataOutputStream out) {
 
     }
-    public static void efetuaReserva(DataInputStream in, Socket s) {
-
-    }
-    public static void mudaOrigem(DataInputStream in, Socket s) {
+    public static void mudaOrigem(DataInputStream in, DataOutputStream out) {
 
     }
 
-    public static void mudaDestino(DataInputStream in, Socket s) {
+    public static void mudaDestino(DataInputStream in, DataOutputStream out) {
 
     }
-    public static void mudaCapacidade(DataInputStream in, Socket s) {
+    public static void mudaCapacidade(DataInputStream in, DataOutputStream out) {
 
     }
-    public static void encerraDia(DataInputStream in, Socket s) {
+    public static void encerraDia(DataInputStream in, DataOutputStream out) {
 
     }
-    public static void listaVoos(DataInputStream in, Socket s) {
+    public static void listaVoos(DataInputStream in, DataOutputStream out) {
 
     }
 }

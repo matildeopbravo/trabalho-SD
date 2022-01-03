@@ -26,4 +26,8 @@ public class ClientUser {
     public String getUserName() {
         return username;
     }
+
+    public String getPassword() {
+        return password;
+    }
 }
