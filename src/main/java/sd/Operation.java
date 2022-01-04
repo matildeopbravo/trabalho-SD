@@ -13,6 +13,7 @@ public enum Operation {
     Registar(Server::registaUser),
     Autenticar(null),
     Reserva(Server::efetuaReserva),
+    CancelaReserva(Server::cancelaReserva),
     MudaOrigem(Server::mudaOrigem),
     MudaDestino(Server::mudaDestino),
     MudaCapacidade(Server::mudaCapacidade),

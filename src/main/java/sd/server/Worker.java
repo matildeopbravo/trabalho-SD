@@ -10,7 +10,7 @@ import java.net.Socket;
 
 public class Worker implements Runnable {
     private int patience ;
-    private static ServerUser user;
+    private ServerUser user;
     private Socket s ;
     private DataInputStream in ;
     private DataOutputStream out ;
@@ -52,8 +52,8 @@ public class Worker implements Runnable {
             }
         }
         finally {
-            endConnection();
-        }
+        endConnection();
+    }
     }
 
     private void handleFailure() {

@@ -5,16 +5,18 @@ import sd.client.ClientUser;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 
 public class ServerUser {
     private final ClientUser user;
-    private Connection connection;
+    private boolean isAuthenticated;
     private final boolean isAdmin ;
 
     // se for criado pelo cliente nao pode ser admin
     public ServerUser(ClientUser user) {
         this.user = user;
         this.isAdmin = false;
+        this.isAuthenticated  = false;
     }
 
     public ServerUser(String username, String password,  boolean isAdmin) {
@@ -22,14 +24,15 @@ public class ServerUser {
         this.isAdmin = isAdmin;
     }
 
-    public static ServerUser deserialize() {
-        //TODO
-        return null;
-    }
-
-    public void createConnection(DataInputStream in, DataOutputStream out) {
-        this.connection = new Connection(in,out);
-    }
+    //public void serialize(DataOutputStream out) throws IOException {
+    //    user.serialize(out);
+    //    out.writeBoolean(isAuthenticated);
+    //    out.writeBoolean(isAdmin);
+    //}
+    //public static ServerUser deserialize(DataInputStream in) throws IOException {
+    //    ClientUser usr = ClientUser.deserialize(in);
+    //    return new ServerUser(usr);
+    //}
 
     public String getUserName() {
         return user.getUserName();
@@ -39,16 +42,8 @@ public class ServerUser {
         return user.getPassword();
     }
 
-    public void serialize(DataOutputStream out) {
-        // TODO
-    }
-
-    public void setIsAuthenticated(boolean b) {
-        // TODO
-    }
-
-    public void setStreams(DataInputStream in, DataOutputStream out) {
-        // TODO
+    public void  setIsAuthenticated(boolean b) {
+        this.isAuthenticated = b;
     }
 
     public boolean isAdmin(){

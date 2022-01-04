@@ -9,7 +9,10 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class Server {
     private ServerSocket serverSocket;
@@ -18,7 +21,7 @@ public class Server {
     // id voo -> voo
     private static HashMap<String,Voo> voos;
     // idReserva -> Reserva
-    private static HashMap<String, Reserva> reservas;
+    private static HashMap<Integer, Reserva> reservas;
 
     public Server(int port, String address) {
         try {
@@ -72,7 +75,6 @@ public class Server {
             ServerUser serverUser = users.get(clientUser.getUserName());
             if(serverUser != null && serverUser.getPassword().equals(clientUser.getPassword())) {
                 serverUser.setIsAuthenticated(true);
-                serverUser.setStreams(in,out);
             }
         } catch (IOException e) {
             Reply.Failure.serialize(out);
@@ -81,12 +83,30 @@ public class Server {
     }
     public static void efetuaReserva(DataInputStream in, DataOutputStream out) {
         try {
-            Reserva r = Reserva.deserialize(in);
-            // criar a reserva e responder
+            int numCidades = in.read();
+            var cidades =  new ArrayList<>(numCidades);
+            for(int i = 0; i < numCidades ; i++) {
+                cidades.add(in.readUTF());
+            }
+            LocalDate ini = LocalDate.parse(in.readUTF());
+            LocalDate fi = LocalDate.parse(in.readUTF());
+            String idVoo = descobreVoo(cidades,ini,fi).getID();
+            if( idVoo != null) {
+                Reply.Codigo.serialize(out);
+                out.writeUTF(idVoo);
+            }
+            else {
+                Reply.Failure.serialize(out);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+
+    }
+
+    private static Voo descobreVoo(ArrayList<Object> cidades, LocalDate ini, LocalDate fi) {
+        //TODO
     }
 
     public static void mudaOrigem(DataInputStream in, DataOutputStream out) {
@@ -103,6 +123,17 @@ public class Server {
         // TODO
     }
     public static void listaVoos(DataInputStream in, DataOutputStream out) {
+        try {
+            out.writeInt(voos.size());
+            for(Voo v : voos.values()) {
+                v.serialize(out);
+            }
+        }
+        catch (IOException e) {
+            Reply.Failure.serialize(out);
+        }
+    }
 
+    public static void cancelaReserva(DataInputStream dataInputStream, DataOutputStream dataOutputStream) {
     }
 }
