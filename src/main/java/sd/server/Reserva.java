@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Set;
 
 public class Reserva {
-    private static long lastCodigo = -1;
+    private static int lastCodigo = -1;
 
-    private long codigoReserva;
+    private int codigoReserva;
     private ServerUser usr;
     private Set<Voo> voos;
 
@@ -20,6 +20,10 @@ public class Reserva {
         this.usr = usr;
         this.codigoReserva = ++lastCodigo;
         this.voos = voos;
+    }
+
+    public int getId() {
+        return codigoReserva;
     }
 
     //public void serialize(DataOutputStream out) throws IOException {

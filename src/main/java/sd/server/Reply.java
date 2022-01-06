@@ -8,11 +8,12 @@ public enum Reply {
     Success,
     Failure,
     InvalidFormat,
-    Codigo
-    ;
+    PermissionDenied,
+    Codigo;
 
     public void serialize(DataOutputStream outputStream) {
         try {
+            System.out.println("Serealized " + this);
             outputStream.writeInt(this.ordinal());
         } catch (IOException e) {
             e.printStackTrace();
@@ -20,6 +21,8 @@ public enum Reply {
     }
 
     public static Reply deserialize(DataInputStream inputStream) throws IOException {
-        return values()[inputStream.readInt()];
+        Reply r = values()[inputStream.readInt()];
+        System.out.println("Deserealized " + r);
+        return r;
     }
 }

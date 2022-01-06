@@ -36,4 +36,9 @@ public class Voo {
     public String getID() {
         return id;
     }
+
+    @Override
+    public String toString() {
+        return id + ": " + origem + " -> " + destino + "; Capacidade: " + capacidade + " Data: " + data;
+    }
 }
