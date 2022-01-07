@@ -119,8 +119,6 @@ public class Menu {
             System.out.println(s);
             show();
             op = readOption();
-            System.out.println("Read option " + op);
-            // testar pré-condição
             if (op > 0 && !this.disponivel.get(op-1).validate()) {
                 System.out.println("O servidor vai dar erro mas podes sempre tentar");
             }
@@ -128,8 +126,13 @@ public class Menu {
                     try {
                         this.handlers.get(op-1).execute();
                     }
-                    catch (NoSuchElementException ignored){
+                    catch (NoSuchElementException e){
                         ClientUI.changeScanner();
+                    }
+                    // ctrl-d por exemplo
+                    catch(IndexOutOfBoundsException e){
+                        return;
+
                     }
                 } catch (PermissionDeniedException e) {
                     System.out.println("Server: Nenhum User Autenticado");
@@ -174,7 +177,6 @@ public class Menu {
             }
             System.out.println(option);
         }
-        System.out.println("0 - Sair");
     }
 
     /** Ler uma opção válida */
