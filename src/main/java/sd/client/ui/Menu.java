@@ -1,5 +1,6 @@
 package sd.client.ui;
 
+import sd.client.Client;
 import sd.exceptions.PermissionDeniedException;
 
 import java.util.*;
@@ -107,17 +108,22 @@ public class Menu {
      *
      * Termina com a opção 0 (zero).
      */
-    public void run() {
+    public void run(Client c) {
         int op;
         int i = 0;
         do {
+            String s = "Nenhum User autenticado!";
+            if(c.isAutenticado()) {
+                s = c.getUserAutenticado().getUserName() + " autenticado";
+            }
+            System.out.println(s);
             show();
             op = readOption();
             System.out.println("Read option " + op);
             // testar pré-condição
             if (op > 0 && !this.disponivel.get(op-1).validate()) {
-                System.out.println("Opção indisponível! Tente novamente.");
-            } else if (op > 0) {
+                System.out.println("O servidor vai dar erro mas podes sempre tentar");
+            }
                 try {
                     try {
                         this.handlers.get(op-1).execute();
@@ -126,9 +132,8 @@ public class Menu {
                         ClientUI.changeScanner();
                     }
                 } catch (PermissionDeniedException e) {
-                    System.out.println("User não Autenticado");
+                    System.out.println("Server: Nenhum User Autenticado");
                 }
-            }
         } while (op != 0);
     }
 
@@ -160,7 +165,14 @@ public class Menu {
         for (int i=0; i<this.opcoes.size(); i++) {
             System.out.print(i+1);
             System.out.print(" - ");
-            System.out.println(this.disponivel.get(i).validate()?this.opcoes.get(i):"---");
+            String option = this.opcoes.get(i);
+            if(this.disponivel.get(i).validate()) {
+                option = ClientUI.ANSI_GREEN + option + ClientUI.ANSI_RESET;
+            }
+            else {
+                option = ClientUI.ANSI_RED + option + ClientUI.ANSI_RESET;
+            }
+            System.out.println(option);
         }
         System.out.println("0 - Sair");
     }

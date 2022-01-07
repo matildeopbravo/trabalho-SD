@@ -1,6 +1,7 @@
 package sd.server;
 
 import sd.Operation;
+import sd.client.ui.ClientUI;
 import sd.exceptions.NotAdminException;
 
 import java.io.DataInputStream;
@@ -34,7 +35,11 @@ public class Worker implements Runnable {
         try {
             while(!s.isClosed() && patience > 0) {
                 try {
-                    Operation op = Operation.values()[-(in.readInt()+1)];
+                    int n = in.readInt();
+                    System.out.println("read :" + n);
+                    Operation op = Operation.getFromFakeOrdinal(n);
+                    System.out.println(op);
+
                     System.out.println("O user pretende realizer operação: " + op);
                     if(op.equals(Operation.Autenticar)) {
                         user = Operation.autenticaUser(in, out);
@@ -43,6 +48,7 @@ public class Worker implements Runnable {
                     else {
                         if (!op.equals(Operation.Registar) && !isAuthenticated()) {
                             System.out.println("Pedido de user não autenticado");
+                            //in.skip(in.available());
                             handleFailure();
                             continue;
                         }
@@ -50,8 +56,7 @@ public class Worker implements Runnable {
                     }
                 }
                 catch (ArrayIndexOutOfBoundsException e) {
-                    System.out.println("out of bounds");
-                    //Reply.InvalidFormat.serialize(out);
+                    Reply.InvalidFormat.serialize(out);
                 }
                 catch(IOException e){
                     return;
@@ -63,7 +68,8 @@ public class Worker implements Runnable {
             }
         }
         finally {
-            System.err.println("Client " + s.getInetAddress() + " disconnected");
+            System.out.println("Client "   + ClientUI.ANSI_RED + s.getInetAddress().getHostAddress() + ClientUI.ANSI_RESET + " disconnected");
+
             endConnection();
         }
     }
@@ -74,10 +80,10 @@ public class Worker implements Runnable {
     }
 
     private void callMethodIfPossible(Operation op) throws NotAdminException {
+        op.callHandleMethod(in,out);
         if(user != null && !user.isAdmin() && op.isAdminOption()) {
             throw new NotAdminException();
         }
-        op.callHandleMethod(in,out);
     }
 
     private boolean isAuthenticated() {

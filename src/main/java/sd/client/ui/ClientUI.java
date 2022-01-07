@@ -53,7 +53,13 @@ public class ClientUI {
                 "Encerra Dia",
         });
 
-        //menu.setPreCondition(1, ()-> !client.isAutenticado() );
+        // isto deixa na mesma executar a acao, so fica a vermelho se nao satisfizer a condicao
+        menu.setPreCondition(2, ()-> !client.isAutenticado() );
+        menu.setPreCondition(3, ()-> client.isAutenticado() );
+        menu.setPreCondition(4, ()-> client.isAutenticado() );
+        menu.setPreCondition(5, ()-> client.isAutenticado() );
+        menu.setPreCondition(6, ()-> client.isAutenticado() && client.isAdmin());
+        menu.setPreCondition(7, ()-> client.isAutenticado() && client.isAdmin());
         //menu.setPreCondition(2, ()->  !client.isAutenticado() );
 
         menu.setHandler(1, this::registar);
@@ -61,7 +67,7 @@ public class ClientUI {
         menu.setHandler(4, this::cancelarReserva);
         menu.setHandler(5, this::listaVoos);
         menu.setHandler(6, this::adicionaVoo);
-        menu.run();
+        menu.run(client);
     }
 
     private void adicionaVoo() {
@@ -88,12 +94,13 @@ public class ClientUI {
     }
 
     private void cancelarReserva() {
-            System.out.print("Introduza o número da reserva a cancelar");
+            System.out.print("Introduza o número da reserva a cancelar ");
             int num = 0;
             boolean start = true;
             do{
                 if(!start)
                     System.out.print("Não é possível cancelar essa reserva ");
+
                 start = false;
                 num = Integer.parseInt(scin.nextLine());
             } while(!client.cancelaReserva(num).equals(Reply.Success));

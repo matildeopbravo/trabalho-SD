@@ -20,12 +20,16 @@ public enum Reply {
     }
 
     public static Reply deserialize(DataInputStream inputStream) throws IOException {
-        Reply r = values()[-(inputStream.readInt()+1)];
+        Reply r = values()[getOrdinalFromFake(inputStream.readInt())];
         System.out.println("Deserealized " + r);
         return r;
     }
     public int getValue() {
         return -this.ordinal() - 1;
+    }
+
+    public static int getOrdinalFromFake(int fakeValue) {
+        return -(fakeValue+1);
     }
 
 }

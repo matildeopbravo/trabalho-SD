@@ -2,7 +2,6 @@ package sd.server;
 
 import sd.client.ClientUser;
 import sd.client.ui.ClientUI;
-import sd.client.ui.Menu;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -35,9 +34,7 @@ public class Server {
         users.put("matilde", new ServerUser("matilde","bravo", false));
         voos = new HashMap<>();
         Voo voo1 = new Voo("Londres", "Amsterdão", 2500, LocalDate.now());
-        System.out.println("Criado voo com id " + voo1.getID());
-        Voo voo2 = new Voo("Belim", "Lisboa", 2500, LocalDate.now());
-        System.out.println("Criado voo com id " + voo2.getID());
+        Voo voo2 = new Voo("Berlim", "Lisboa", 2500, LocalDate.now());
         voos.put(0,voo1);
         voos.put(1,voo2);
         HashSet<Voo> s1 = new HashSet<>();
@@ -54,6 +51,7 @@ public class Server {
         while(true) {
             try {
                 Socket s = serverSocket.accept();
+                System.out.println("Client "   + ClientUI.ANSI_BLUE + s.getInetAddress().getHostAddress() + ClientUI.ANSI_RESET + " connected");
                 new Thread(new Worker(s)).start();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -94,6 +92,7 @@ public class Server {
             serverUser = users.get(clientUser.getUserName());
             if(serverUser != null && serverUser.getPassword().equals(clientUser.getPassword())) {
                 Reply.Success.serialize(out);
+                out.writeBoolean(serverUser.isAdmin());
                 serverUser.setIsAuthenticated(true);
                 return serverUser;
             }

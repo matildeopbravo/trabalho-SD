@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+// a unica informacao sobre o user que o cliente. O servidor guarda um client user
 public class ClientUser {
     private String username;
     private String password;
@@ -13,12 +14,10 @@ public class ClientUser {
         this.password = password;
     }
 
-
     public void serialize(DataOutputStream out) throws IOException {
             out.writeUTF(username);
             out.writeUTF(password);
     }
-
     public static ClientUser deserialize(DataInputStream in) throws IOException {
         return new ClientUser(in.readUTF(),in.readUTF());
     }

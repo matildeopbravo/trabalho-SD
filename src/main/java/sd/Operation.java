@@ -1,6 +1,7 @@
 package sd;
 
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -24,6 +25,7 @@ public enum Operation {
         this.action = action;
     }
 
+
     public void serialize(DataOutputStream output) throws IOException {
         output.writeInt(this.getValue());
     }
@@ -41,6 +43,14 @@ public enum Operation {
     }
     public int getValue() {
         return -this.ordinal() -  1;
+    }
+    public static int getOrdinalFromFake(int fakeValue) {
+        return -(fakeValue+1);
+    }
+
+    public static Operation getFromFakeOrdinal(int readInt) throws ArrayIndexOutOfBoundsException {
+        int real = getOrdinalFromFake(readInt);
+        return Operation.values()[real];
     }
 
 }
