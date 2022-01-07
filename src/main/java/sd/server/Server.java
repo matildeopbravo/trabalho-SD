@@ -10,9 +10,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 public class Server {
     private ServerSocket serverSocket;
@@ -35,8 +33,20 @@ public class Server {
         voos = new HashMap<>();
         Voo voo1 = new Voo("Londres", "Amsterdão", 2500, LocalDate.now());
         Voo voo2 = new Voo("Berlim", "Lisboa", 2500, LocalDate.now());
+        Voo voo3 = new Voo("Itália", "Lisboa", 2500, LocalDate.now().plusMonths(4));
+        Voo voo4 = new Voo("Porto", "Itália", 2500, LocalDate.now().plusMonths(1));
+        Voo voo5 = new Voo("Itália", "França", 2500, LocalDate.now().plusMonths(2));
+        Voo voo6 = new Voo("França", "Lisboa", 2500, LocalDate.now().plusMonths(3));
+        Voo voo7 = new Voo("Porto", "Lisboa", 2500, LocalDate.now().plusDays(1));
+        Voo voo8 = new Voo("França", "Itália", 2500, LocalDate.now().plusMonths(3));
         voos.put(0,voo1);
         voos.put(1,voo2);
+        voos.put(2,voo3);
+        voos.put(3,voo4);
+        voos.put(4,voo5);
+        voos.put(5,voo6);
+        voos.put(6,voo7);
+        voos.put(7,voo8);
         HashSet<Voo> s1 = new HashSet<>();
         s1.add(voos.get(0));
         s1.add(voos.get(1));
@@ -184,5 +194,32 @@ public class Server {
             e.printStackTrace();
         }
 
+    }
+
+    List<List<Voo>> percursosPossiveis (String origem, String destino) {
+        return percursosPossiveis(origem, destino, 3, LocalDate.now());
+    }
+
+    List<List<Voo>> percursosPossiveis (String origem, String destino, int limiteVoos, LocalDate dataAtual) {
+        List<List<Voo>> percursos = new ArrayList<>();
+
+        for (Voo voo: voos.values()) {
+            if (voo.getOrigem().equals(origem) && voo.getData().isAfter(dataAtual)) {
+                if (voo.getDestino().equals(destino))
+                    percursos.add(new ArrayList<>(List.of(voo)));
+
+                else if (limiteVoos > 1) {
+                    List<List<Voo>> percursosPosteriores =
+                            percursosPossiveis(voo.getDestino(), destino, limiteVoos-1, voo.getData());
+                    for (List<Voo> percursoPosterior : percursosPosteriores) {
+                        List<Voo> percursoFinal = new ArrayList<>(List.of(voo));
+                        percursoFinal.addAll(percursoPosterior);
+                        percursos.add(percursoFinal);
+                    }
+                }
+            }
+        }
+
+        return percursos;
     }
 }

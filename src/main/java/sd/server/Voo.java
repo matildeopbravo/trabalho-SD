@@ -59,4 +59,16 @@ public class Voo {
     public String toString() {
         return id + ": " + origem + " -> " + destino + "; Capacidade: " + capacidade + " Data: " + data;
     }
+
+    public String getOrigem() {
+        return this.origem;
+    }
+
+    public String getDestino() {
+        return this.destino;
+    }
+
+    public LocalDate getData() {
+        return this.data;
+    }
 }
