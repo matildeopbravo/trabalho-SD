@@ -1,26 +1,42 @@
 package sd.client.ui;
 
 import sd.client.Client;
+import sd.exceptions.PermissionDeniedException;
 import sd.server.Reply;
-import sd.server.Server;
 import sd.server.Voo;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.util.ArrayList;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Scanner;
 public class ClientUI {
+        public static final String ANSI_RESET = "\u001B[0m";
+        public static final String ANSI_BLACK = "\u001B[30m";
+        public static final String ANSI_RED = "\u001B[31m";
+        public static final String ANSI_GREEN = "\u001B[32m";
+        public static final String ANSI_YELLOW = "\u001B[33m";
+        public static final String ANSI_BLUE = "\u001B[34m";
+        public static final String ANSI_PURPLE = "\u001B[35m";
+        public static final String ANSI_CYAN = "\u001B[36m";
+        public static final String ANSI_WHITE = "\u001B[37m";
+        public static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/y");
+        private static Scanner scin;
+
         private Client client;
 
-        private Scanner scin;
 
         public ClientUI(String address, int port) throws IOException {
             this.client = new Client(address,port);
             scin = new Scanner(System.in);
         }
 
-        public void run() throws IOException {
+    public static void changeScanner() {
+            scin = new Scanner(System.in);
+    }
+
+    public void run() throws IOException {
             System.out.println("Bem Vindo Sistema De Reservas de Voos ");
             this.menuPrincipal();
             System.out.println("Até breve...");
@@ -33,19 +49,42 @@ public class ClientUI {
                 "Efetuar Reserva",
                 "Cancelar Reserva",
                 "Lista de voos",
-                "Muda Origem",
-                "Muda Capacidade",
+                "Adiciona Voo",
                 "Encerra Dia",
         });
 
         //menu.setPreCondition(1, ()-> !client.isAutenticado() );
         //menu.setPreCondition(2, ()->  !client.isAutenticado() );
 
-        menu.setHandler(1, ()->registar());
-        menu.setHandler(2, ()->autenticar());
-        menu.setHandler(4, ()->cancelarReserva());
-        menu.setHandler(5, ()->listaVoos());
+        menu.setHandler(1, this::registar);
+        menu.setHandler(2, this::autenticar);
+        menu.setHandler(4, this::cancelarReserva);
+        menu.setHandler(5, this::listaVoos);
+        menu.setHandler(6, this::adicionaVoo);
         menu.run();
+    }
+
+    private void adicionaVoo() {
+            System.out.print("Origem: ");
+            String origem = scin.nextLine();
+            System.out.print("Destino: ");
+            String destino = scin.nextLine();
+            System.out.print("Capacidade: ");
+            long capacidade = Long.parseLong(scin.nextLine());
+            System.out.print("Data: ");
+            LocalDate data = LocalDate.parse(scin.nextLine(), formatter );
+
+        try {
+            if(client.adicionaVoo(origem,destino,capacidade,data)) {
+                System.out.println("Voo adicionado com sucesso");
+            }
+            else {
+                System.out.println("Esta funcionalidade apenas está disponivel para admins");
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void cancelarReserva() {
@@ -61,7 +100,7 @@ public class ClientUI {
             System.out.println("Reserva Nº " + num + " cancelada com sucesso!");
     }
 
-    private void listaVoos() {
+    private void listaVoos() throws PermissionDeniedException {
         try {
             List<Voo> l = client.pedeListaVoos();
             l.forEach(System.out::println);

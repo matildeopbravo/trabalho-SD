@@ -1,11 +1,9 @@
-package sd;
+package sd.server;
 
-import sd.client.ui.ClientUI;
-
-import java.io.IOException;
+import sd.client.ui.Menu;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
+    public static void main(String [] args) {
         String address = "127.0.0.1";
         int port = 2500;
         if(args.length > 0) {
@@ -13,8 +11,7 @@ public class Main {
             if(args.length > 1)
                 port = Integer.parseInt(args[1]);
         }
-        ClientUI ui = new ClientUI(address,port);
-        ui.run();
-
+        Server s = new Server(port, address);
+        s.start();
     }
 }

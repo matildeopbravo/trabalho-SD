@@ -14,9 +14,7 @@ public enum Operation {
     Autenticar(null),
     Reserva(Server::efetuaReserva),
     CancelaReserva(Server::cancelaReserva),
-    MudaOrigem(Server::mudaOrigem),
-    MudaDestino(Server::mudaDestino),
-    MudaCapacidade(Server::mudaCapacidade),
+    AdicionaVoo(Server::adicionaVoo),
     Encerramento(Server::encerraDia),
     ListaVoos(Server::listaVoos);
 
@@ -27,7 +25,7 @@ public enum Operation {
     }
 
     public void serialize(DataOutputStream output) throws IOException {
-        output.writeInt(this.ordinal());
+        output.writeInt(this.getValue());
     }
     public void callHandleMethod(DataInputStream in, DataOutputStream out) {
             this.action.accept(in,out);
@@ -37,8 +35,12 @@ public enum Operation {
     }
 
     public boolean isAdminOption() {
-        return this.equals(Encerramento) || this.equals(MudaCapacidade) || this.equals(MudaDestino)
-                || this.equals(MudaOrigem);
+        return this.equals(Encerramento)  || this.equals(AdicionaVoo);
+                //|| this.equals(MudaCapacidade) || this.equals(MudaDestino)
+                //|| this.equals(MudaOrigem);
+    }
+    public int getValue() {
+        return -this.ordinal() -  1;
     }
 
 }

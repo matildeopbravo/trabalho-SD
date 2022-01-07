@@ -1,6 +1,7 @@
 package sd.server;
 
 import sd.client.ClientUser;
+import sd.client.ui.ClientUI;
 import sd.client.ui.Menu;
 
 import java.io.DataInputStream;
@@ -19,7 +20,7 @@ public class Server {
     // username -> info
     private static HashMap<String, ServerUser> users;
     // id voo -> voo
-    private static HashMap<String,Voo> voos;
+    private static HashMap<Integer,Voo> voos;
     // idReserva -> Reserva
     private static HashMap<Integer, Reserva> reservas;
 
@@ -33,20 +34,19 @@ public class Server {
         users.put("admin",new ServerUser("admin","password", true));
         users.put("matilde", new ServerUser("matilde","bravo", false));
         voos = new HashMap<>();
-        voos.put("abcd", new Voo("abcd","Londres", "Amsterdão", 2500, LocalDate.now()));
-        voos.put("efgh", new Voo("efgh","Berlim", "Lisboa", 3000, LocalDate.now()));
+        Voo voo1 = new Voo("Londres", "Amsterdão", 2500, LocalDate.now());
+        System.out.println("Criado voo com id " + voo1.getID());
+        Voo voo2 = new Voo("Belim", "Lisboa", 2500, LocalDate.now());
+        System.out.println("Criado voo com id " + voo2.getID());
+        voos.put(0,voo1);
+        voos.put(1,voo2);
         HashSet<Voo> s1 = new HashSet<>();
-        s1.add(voos.get("efgh"));
-        s1.add(voos.get("abcd"));
+        s1.add(voos.get(0));
+        s1.add(voos.get(1));
+        System.out.println(Voo.lastId);
         Reserva r1 = new Reserva( users.get("matilde"), s1);
         reservas = new HashMap<>();
         reservas.put(r1.getId(),r1);
-    }
-
-    public static void main(String [] args) {
-        Server s = new Server(2500,"127.0.0.1");
-        Menu menu = new Menu();
-        s.start();
     }
 
     public void start() {
@@ -112,10 +112,10 @@ public class Server {
             }
             LocalDate ini = LocalDate.parse(in.readUTF());
             LocalDate fi = LocalDate.parse(in.readUTF());
-            String idVoo = descobreVoo(cidades,ini,fi).getID();
-            if( idVoo != null) {
+            Voo voo = descobreVoo(cidades,ini,fi);
+            if( voo != null) {
                 Reply.Codigo.serialize(out);
-                out.writeUTF(idVoo);
+                out.writeInt(voo.getID());
             }
             else {
                 Reply.Failure.serialize(out);
@@ -123,8 +123,6 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
     private static Voo descobreVoo(ArrayList<Object> cidades, LocalDate ini, LocalDate fi) {
@@ -173,6 +171,19 @@ public class Server {
             e.printStackTrace();
         }
 
+
+    }
+
+    public static void adicionaVoo(DataInputStream in, DataOutputStream out) {
+        try {
+            Voo v = Voo.deserializeWithoutID(in);
+            voos.put(v.getID(),v);
+            System.out.println("Adicionado voo com id " + v.getID());
+            Reply.Success.serialize(out);
+        } catch (IOException e) {
+            Reply.Failure.serialize(out);
+            e.printStackTrace();
+        }
 
     }
 }

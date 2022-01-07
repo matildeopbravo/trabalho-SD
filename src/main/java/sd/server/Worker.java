@@ -5,8 +5,10 @@ import sd.exceptions.NotAdminException;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class Worker implements Runnable {
     private int patience ;
@@ -28,10 +30,11 @@ public class Worker implements Runnable {
     }
 
     public void run() {
+        int i = 0;
         try {
-            while(s.isConnected() && patience > 0) {
+            while(!s.isClosed() && patience > 0) {
                 try {
-                    Operation op = Operation.values()[in.readInt()];
+                    Operation op = Operation.values()[-(in.readInt()+1)];
                     System.out.println("O user pretende realizer operação: " + op);
                     if(op.equals(Operation.Autenticar)) {
                         user = Operation.autenticaUser(in, out);
@@ -39,7 +42,7 @@ public class Worker implements Runnable {
                     }
                     else {
                         if (!op.equals(Operation.Registar) && !isAuthenticated()) {
-                            System.out.println("Precisa de estar autenticado para realizar esse pedido");
+                            System.out.println("Pedido de user não autenticado");
                             handleFailure();
                             continue;
                         }
@@ -47,10 +50,10 @@ public class Worker implements Runnable {
                     }
                 }
                 catch (ArrayIndexOutOfBoundsException e) {
-                    Reply.InvalidFormat.serialize(out);
+                    System.out.println("out of bounds");
+                    //Reply.InvalidFormat.serialize(out);
                 }
                 catch(IOException e){
-                    e.printStackTrace();
                     return;
                 }
                 catch(NotAdminException e) {
@@ -60,8 +63,9 @@ public class Worker implements Runnable {
             }
         }
         finally {
-        endConnection();
-    }
+            System.err.println("Client " + s.getInetAddress() + " disconnected");
+            endConnection();
+        }
     }
 
     private void handleFailure() {

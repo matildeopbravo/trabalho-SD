@@ -1,9 +1,8 @@
 package sd.client.ui;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import sd.exceptions.PermissionDeniedException;
+
+import java.util.*;
 
 public class Menu {
 
@@ -11,7 +10,7 @@ public class Menu {
 
     /** Functional interface para handlers. */
     public interface Handler {
-        void execute();
+        void execute() throws PermissionDeniedException;
     }
 
     /** Functional interface para pré-condições. */
@@ -60,35 +59,12 @@ public class Menu {
         this.handlers = new ArrayList();
         this.opcoes.forEach(s-> {
             this.disponivel.add(()->true);
-            this.handlers.add(()->System.out.println("\nATENÇÃO: Opção não implementada!"));
+            this.handlers.add(()->System.out.println("\n Opção não implementada!"));
         });
     }
 
-    /**
-     * Constructor para objectos da classe Menu (sem título e com List de opções).
-     *
-     * Cria um menu de opções sem event handlers.
-     * Utilização de listas é útil para definir menus dinâmicos.
-     *
-     * @param opcoes Uma lista de Strings com as opções do menu.
-     */
     public Menu(List<String> opcoes) { this("Menu", opcoes); }
 
-    /**
-     * Constructor para objectos da classe Menu (com título e array de opções).
-     *
-     * Cria um menu de opções sem event handlers.
-     * Utilização de arrays é útil para definir menus estáticos. P.e.:
-     *
-     * new Menu(String[]{
-     *     "Opção 1",
-     *     "Opção 2",
-     *     "Opção 3"
-     * })
-     *
-     * @param titulo O titulo do menu
-     * @param opcoes Um array de Strings com as opções do menu.
-     */
     public Menu(String titulo, String[] opcoes) {
         this(titulo, Arrays.asList(opcoes));
     }
@@ -127,37 +103,31 @@ public class Menu {
     }
 
     /**
-     * Correr o menu uma vez.
-     */
-    public void runOnce() {
-        int op;
-        show();
-        op = readOption();
-        // testar pré-condição
-        if (op>0 && !this.disponivel.get(op-1).validate()) {
-            System.out.println("Opção indisponível!");
-        } else if (op>0) {
-            // executar handler
-            this.handlers.get(op-1).execute();
-        }
-    }
-
-    /**
      * Correr o menu multiplas vezes.
      *
      * Termina com a opção 0 (zero).
      */
     public void run() {
         int op;
+        int i = 0;
         do {
             show();
             op = readOption();
+            System.out.println("Read option " + op);
             // testar pré-condição
-            if (op>0 && !this.disponivel.get(op-1).validate()) {
+            if (op > 0 && !this.disponivel.get(op-1).validate()) {
                 System.out.println("Opção indisponível! Tente novamente.");
-            } else if (op>0) {
-                // executar handler
-                this.handlers.get(op-1).execute();
+            } else if (op > 0) {
+                try {
+                    try {
+                        this.handlers.get(op-1).execute();
+                    }
+                    catch (NoSuchElementException ignored){
+                        ClientUI.changeScanner();
+                    }
+                } catch (PermissionDeniedException e) {
+                    System.out.println("User não Autenticado");
+                }
             }
         } while (op != 0);
     }
@@ -198,17 +168,21 @@ public class Menu {
     /** Ler uma opção válida */
     private int readOption() {
         int op;
-
         System.out.print("Opção: ");
         try {
-            String line = is.nextLine();
-            op = Integer.parseInt(line);
+            try {
+                String line = is.nextLine();
+                op = Integer.parseInt(line);
+            }
+            catch(NoSuchElementException e) {
+                return 0;
+            }
         }
         catch (NumberFormatException e) {
             op = -1;
         }
         if (op<0 || op>this.opcoes.size()) {
-            System.out.println("Opção Inválida!!!");
+            System.out.println("Opção Inválida!");
             op = -1;
         }
         return op;
