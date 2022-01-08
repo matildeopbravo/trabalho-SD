@@ -8,39 +8,39 @@ import sd.server.Voo;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Scanner;
+
 public class ClientUI {
-        public static final String ANSI_RESET = "\u001B[0m";
-        public static final String ANSI_BLACK = "\u001B[30m";
-        public static final String ANSI_RED = "\u001B[31m";
-        public static final String ANSI_GREEN = "\u001B[32m";
-        public static final String ANSI_YELLOW = "\u001B[33m";
-        public static final String ANSI_BLUE = "\u001B[34m";
-        public static final String ANSI_PURPLE = "\u001B[35m";
-        public static final String ANSI_CYAN = "\u001B[36m";
-        public static final String ANSI_WHITE = "\u001B[37m";
-        public static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/y");
-        private static Scanner scin;
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_BLACK = "\u001B[30m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+    public static final String ANSI_PURPLE = "\u001B[35m";
+    public static final String ANSI_CYAN = "\u001B[36m";
+    public static final String ANSI_WHITE = "\u001B[37m";
+    public static final String ANSI_BOLD = "\u001B[1m";
+    public static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/y");
+    private static Scanner scin;
 
-        private Client client;
+    private Client client;
 
-
-        public ClientUI(String address, int port) throws IOException {
-            this.client = new Client(address,port);
-            scin = new Scanner(System.in);
-        }
+    public ClientUI(String address, int port) throws IOException {
+        this.client = new Client(address, port);
+        scin = new Scanner(System.in);
+    }
 
     public static void changeScanner() {
-            scin = new Scanner(System.in);
+        scin = new Scanner(System.in);
     }
 
     public void run() throws IOException {
-            System.out.println("Bem Vindo Sistema De Reservas de Voos ");
-            this.menuPrincipal();
-            System.out.println("Até breve...");
-        }
+        System.out.println("Bem Vindo Sistema De Reservas de Voos ");
+        this.menuPrincipal();
+        System.out.println("Até breve...");
+    }
 
     private void menuPrincipal() {
         Menu menu = new Menu(new String[]{
@@ -54,12 +54,12 @@ public class ClientUI {
         });
 
         // isto deixa na mesma executar a acao, so fica a vermelho se nao satisfizer a condicao
-        menu.setPreCondition(2, ()-> !client.isAutenticado() );
-        menu.setPreCondition(3, ()-> client.isAutenticado() );
-        menu.setPreCondition(4, ()-> client.isAutenticado() );
-        menu.setPreCondition(5, ()-> client.isAutenticado() );
-        menu.setPreCondition(6, ()-> client.isAutenticado() && client.isAdmin());
-        menu.setPreCondition(7, ()-> client.isAutenticado() && client.isAdmin());
+        menu.setPreCondition(2, () -> !client.isAutenticado());
+        menu.setPreCondition(3, () -> client.isAutenticado());
+        menu.setPreCondition(4, () -> client.isAutenticado());
+        menu.setPreCondition(5, () -> client.isAutenticado());
+        menu.setPreCondition(6, () -> client.isAutenticado() && client.isAdmin());
+        menu.setPreCondition(7, () -> client.isAutenticado() && client.isAdmin());
         //menu.setPreCondition(2, ()->  !client.isAutenticado() );
 
         menu.setHandler(1, this::registar);
@@ -70,21 +70,30 @@ public class ClientUI {
         menu.run(client);
     }
 
+    private String prettyReadLine(String prompt, String color) {
+        System.out.print(ClientUI.ANSI_BOLD + color + "❯ " + ClientUI.ANSI_RESET + ClientUI.ANSI_BOLD +
+                "Opção: " + ClientUI.ANSI_RESET);
+        return scin.nextLine();
+    }
+
+    private String prettyReadLine(String prompt) {
+        return prettyReadLine(prompt, ANSI_YELLOW);
+    }
+
     private void adicionaVoo() {
-            System.out.print("Origem: ");
-            String origem = scin.nextLine();
-            System.out.print("Destino: ");
-            String destino = scin.nextLine();
-            System.out.print("Capacidade: ");
-            long capacidade = Long.parseLong(scin.nextLine());
-            System.out.print("Data: ");
-            LocalDate data = LocalDate.parse(scin.nextLine(), formatter );
+        System.out.print("Origem: ");
+        String origem = scin.nextLine();
+        System.out.print("Destino: ");
+        String destino = scin.nextLine();
+        System.out.print("Capacidade: ");
+        long capacidade = Long.parseLong(scin.nextLine());
+        System.out.print("Data: ");
+        LocalDate data = LocalDate.parse(scin.nextLine(), formatter);
 
         try {
-            if(client.adicionaVoo(origem,destino,capacidade,data)) {
+            if (client.adicionaVoo(origem, destino, capacidade, data)) {
                 System.out.println("Voo adicionado com sucesso");
-            }
-            else {
+            } else {
                 System.out.println("Esta funcionalidade apenas está disponivel para admins");
 
             }
@@ -94,17 +103,17 @@ public class ClientUI {
     }
 
     private void cancelarReserva() {
-            System.out.print("Introduza o número da reserva a cancelar ");
-            int num = 0;
-            boolean start = true;
-            do{
-                if(!start)
-                    System.out.print("Não é possível cancelar essa reserva ");
+        System.out.print("Introduza o número da reserva a cancelar ");
+        int num = 0;
+        boolean start = true;
+        do {
+            if (!start)
+                System.out.print("Não é possível cancelar essa reserva ");
 
-                start = false;
-                num = Integer.parseInt(scin.nextLine());
-            } while(!client.cancelaReserva(num).equals(Reply.Success));
-            System.out.println("Reserva Nº " + num + " cancelada com sucesso!");
+            start = false;
+            num = Integer.parseInt(scin.nextLine());
+        } while (!client.cancelaReserva(num).equals(Reply.Success));
+        System.out.println("Reserva Nº " + num + " cancelada com sucesso!");
     }
 
     private void listaVoos() throws PermissionDeniedException {
@@ -121,26 +130,24 @@ public class ClientUI {
         String username;
         String password;
         do {
-            if(!start) System.out.println("Credenciais Inválidas");
+            if (!start) System.out.println("Credenciais Inválidas");
             System.out.print("Username: ");
             username = scin.nextLine();
             System.out.print("Password: ");
             password = scin.nextLine();
             start = false;
-        } while(!client.autenticaUser(username,password).equals(Reply.Success));
+        } while (!client.autenticaUser(username, password).equals(Reply.Success));
     }
 
     private void registar() {
-            String username;
-            String password;
+        String username;
+        String password;
         do {
-                System.out.print("Username: ");
-                username = scin.nextLine();
-                System.out.print("Password: ");
-                password = scin.nextLine();
-        } while(!client.registaUser(username,password).equals(Reply.Success) );
+            System.out.print("Username: ");
+            username = scin.nextLine();
+            System.out.print("Password: ");
+            password = scin.nextLine();
+        } while (!client.registaUser(username, password).equals(Reply.Success));
         System.out.println("Utilizador Registado Com sucesso");
     }
-
-
 }
