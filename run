@@ -1,6 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
-client="mvn compile exec:java -Dexec.mainClass="sd.client.Main""
-server="mvn compile exec:java -Dexec.mainClass="sd.server.Main""
+client="mvn compile exec:java -Dexec.mainClass=\"sd.server.Main\""
+server="mvn compile exec:java -Dexec.mainClass=\"sd.server.Main\""
+args="${*:2}"
+if [ "$1" == "server" ]; then
+     eval "$server" "$args"
+elif [ "$1" == "client" ]; then
+     eval "$client" "$args"
+else
+    tmux new-session "$server; read" \; split-window -h "sleep 2s; $client" \;
+fi
 
-tmux new-session "$server; read" \; split-window -h "sleep 2s; $client" \;
+
+
