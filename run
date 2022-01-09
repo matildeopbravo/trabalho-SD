@@ -1,6 +1,6 @@
 #!/bin/sh
 
-client="mvn exec:java -Dexec.mainClass="sd.client.Main""
-server="mvn exec:java -Dexec.mainClass="sd.server.Main""
+client="mvn compile exec:java -Dexec.mainClass="sd.client.Main""
+server="mvn compile exec:java -Dexec.mainClass="sd.server.Main""
 
 tmux new-session "$server; read" \; split-window -h "sleep 2s; $client" \;
