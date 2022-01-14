@@ -246,33 +246,33 @@ public class Server {
 
     }
 
-    //List<List<Voo>> percursosPossiveis(String origem, String destino) {
-    //    return percursosPossiveis(origem, destino, 3, LocalDate.now());
-    //}
+    List<List<String>> percursosPossiveis(String origem, String destino) {
+        return percursosPossiveis(origem, destino, 3);
+    }
 
-    // TODO refactor
-    //List<List<Voo>> percursosPossiveis (String origem, String destino, int limiteVoos, LocalDate dataAtual) {
-    //    List<List<Voo>> percursos = new ArrayList<>();
 
-    //    for (Voo voo: voosComReserva.values()) {
-    //        if (voo.getOrigem().equals(origem) && voo.getData().isAfter(dataAtual)) {
-    //            if (voo.getDestino().equals(destino))
-    //                percursos.add(new ArrayList<>(List.of(voo)));
+    List<List<String>> percursosPossiveis (String origem, String destino, int limiteVoos) {
+        List<List<String>> percursos = new ArrayList<>();
 
-    //            else if (limiteVoos > 1) {
-    //                List<List<Voo>> percursosPosteriores =
-    //                        percursosPossiveis(voo.getDestino(), destino, limiteVoos-1, voo.getData());
-    //                for (List<Voo> percursoPosterior : percursosPosteriores) {
-    //                    List<Voo> percursoFinal = new ArrayList<>(List.of(voo));
-    //                    percursoFinal.addAll(percursoPosterior);
-    //                    percursos.add(percursoFinal);
-    //                }
-    //            }
-    //        }
-    //    }
+        for (VooTabelado voo: voosTabelados.values()) {
+            if (voo.getOrigem().equals(origem)) {
+                if (voo.getDestino().equals(destino))
+                    percursos.add(new ArrayList<>(Arrays.asList(origem, destino)));
 
-    //    return percursos;
-    //}
+                else if (limiteVoos > 1) {
+                    List<List<String>> percursosPosteriores =
+                            percursosPossiveis(voo.getDestino(), destino, limiteVoos-1);
+                    for (List<String> percursoPosterior : percursosPosteriores) {
+                        List<String> novoPercurso = new ArrayList<>(List.of(origem));
+                        novoPercurso.addAll(percursoPosterior);
+                        percursos.add(novoPercurso);
+                    }
+                }
+            }
+        }
+
+        return percursos;
+    }
 
     public static void fazLogout(DataInputStream in, DataOutputStream out) {
             try {
