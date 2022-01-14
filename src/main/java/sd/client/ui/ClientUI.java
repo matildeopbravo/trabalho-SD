@@ -81,10 +81,9 @@ public class ClientUI {
     private void efetuarReserva() {
         System.out.print("Locais de Passagem Separados Por Vírgula: ");
         String locais = scin.nextLine();
-        String[] l = locais.split(",");
         System.out.print("Data Inicial (D/M/Y) : ");
         LocalDate dataInit = LocalDate.parse(scin.nextLine(),formatter);
-        System.out.print("Data Final D/M/Y) : ");
+        System.out.print("Data Final (D/M/Y) : ");
         LocalDate dataFin = LocalDate.parse(scin.nextLine(),formatter);
 
         try {

@@ -12,7 +12,7 @@ public enum Reply {
 
     public void serialize(DataOutputStream outputStream) {
         try {
-            System.out.println("Serealized " + this);
+            System.out.println("Serialized " + this);
             outputStream.writeInt(this.getValue());
         } catch (IOException e) {
             e.printStackTrace();
@@ -22,7 +22,7 @@ public enum Reply {
     public static Reply deserialize(DataInputStream inputStream) throws ArrayIndexOutOfBoundsException {
         try {
             Reply r = values()[getOrdinalFromFake(inputStream.readInt())];
-            System.out.println("Deserealized " + r);
+            System.out.println("Deserialized " + r);
             return r;
         }
         catch(IOException e) {
