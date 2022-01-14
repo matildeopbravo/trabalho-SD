@@ -10,6 +10,3 @@ elif [ "$1" == "client" ]; then
 else
     tmux new-session "$server; read" \; split-window -h "sleep 2s; $client" \;
 fi
-
-
-

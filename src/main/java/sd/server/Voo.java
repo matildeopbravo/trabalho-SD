@@ -53,4 +53,8 @@ public class Voo {
     public VooTabelado getVooTabelado() {
         return vooTabelado;
     }
+
+    public void diminuiCapacidade() {
+        capacidade--;
+    }
 }

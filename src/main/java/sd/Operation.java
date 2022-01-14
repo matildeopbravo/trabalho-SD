@@ -20,9 +20,9 @@ public enum Operation {
     Encerramento(Server::encerraDia),
     ListaVoos(Server::listaVoos);
 
-    private BiConsumer<DataInputStream, DataOutputStream> action;
+    private TriConsumer<ServerUser, DataInputStream, DataOutputStream> action;
 
-    Operation(BiConsumer<DataInputStream, DataOutputStream> action) {
+    Operation(TriConsumer<ServerUser, DataInputStream, DataOutputStream> action) {
         this.action = action;
     }
 
@@ -30,8 +30,8 @@ public enum Operation {
     public void serialize(DataOutputStream output) throws IOException {
         output.writeInt(this.getValue());
     }
-    public void callHandleMethod(DataInputStream in, DataOutputStream out) {
-            this.action.accept(in,out);
+    public void callHandleMethod(ServerUser susr, DataInputStream in, DataOutputStream out) {
+            this.action.accept(susr,in,out);
     }
     public static ServerUser autenticaUser (DataInputStream in, DataOutputStream out) {
             return Server.autenticaUser(in,out);

@@ -16,7 +16,7 @@ public class Reserva {
     private ServerUser usr;
     private Set<Voo> voos;
 
-    public Reserva(ServerUser usr, Set<Voo> voos) {
+    public Reserva(ServerUser usr, Set<Voo> voos ) {
         this.usr = usr;
         this.codigoReserva = ++lastCodigo;
         this.voos = voos;

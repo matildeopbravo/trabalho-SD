@@ -61,7 +61,7 @@ public class ClientUI {
         menu.setPreCondition(4, client::isAutenticado);
         menu.setPreCondition(5, client::isAutenticado);
         menu.setPreCondition(6, () -> client.isAutenticado() && client.isAdmin());
-        menu.setPreCondition(7, () -> client.isAutenticado());
+        menu.setPreCondition(7, client::isAutenticado);
         menu.setPreCondition(8, () -> client.isAutenticado() && client.isAdmin());
         menu.setPreCondition(9, () -> client.isAutenticado() && client.isAdmin());
         //menu.setPreCondition(2, ()->  !client.isAutenticado() );
@@ -187,6 +187,8 @@ public class ClientUI {
             password = prettyReadLine("Password", ANSI_YELLOW, true);
             start = false;
         } while (!client.autenticaUser(username, password).equals(Reply.Success));
+        System.out.println("exit ui method");
+
     }
 
     private void registar() {

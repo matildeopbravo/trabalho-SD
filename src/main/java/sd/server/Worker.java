@@ -41,7 +41,10 @@ public class Worker implements Runnable {
                     System.out.println("O user pretende realizer operação: " + op);
                     if(op.equals(Operation.Login)) {
                         user = Operation.autenticaUser(in, out);
-                        System.out.println("User autenticado é " + user);
+                        if(user == null ) System.out.println("credenciais invalidas");
+                        else {
+                            System.out.println("User autenticado é " + user);
+                        }
                     }
                     else {
                         if (!op.equals(Operation.Registar) && !isAuthenticated()) {
@@ -66,7 +69,8 @@ public class Worker implements Runnable {
             }
         }
         finally {
-            System.out.println("Client "   + ClientUI.ANSI_RED + s.getInetAddress().getHostAddress() + ClientUI.ANSI_RESET + " disconnected");
+            System.out.println("Client "   + ClientUI.ANSI_RED + s.getInetAddress().getHostAddress()
+                    + ClientUI.ANSI_RESET + " disconnected");
 
             endConnection();
         }
@@ -78,7 +82,7 @@ public class Worker implements Runnable {
     }
 
     private void callMethodIfPossible(Operation op) throws NotAdminException {
-        op.callHandleMethod(in,out);
+        op.callHandleMethod(user,in,out);
         if(user != null && !user.isAdmin() && op.isAdminOption()) {
             throw new NotAdminException();
         }

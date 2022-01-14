@@ -3,7 +3,6 @@ package sd.server;
 import sd.OrigemDestino;
 import sd.client.ClientUser;
 import sd.client.ui.ClientUI;
-import sd.exceptions.ViagemImpossivelException;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -85,7 +84,7 @@ public class Server {
             }
         }
     }
-    public static void registaUser(DataInputStream in, DataOutputStream out) {
+    public static void registaUser(ServerUser usr, DataInputStream in, DataOutputStream out) {
         System.out.println("Recebido pedido de registar user");
         try {
             ClientUser us = ClientUser.deserialize(in);
@@ -120,7 +119,7 @@ public class Server {
             e.printStackTrace();
         }
         Reply.Failure.serialize(out);
-        return serverUser;
+        return null;
     }
     // todos os percursos para viajar entre uma origem e um destino com no maximo duas escalas (trees voos)
     public static void obtemTodosPercursosPossiveis(DataInputStream in, DataOutputStream out) {
@@ -130,7 +129,7 @@ public class Server {
 
     }
 
-    public static void efetuaReserva(DataInputStream in, DataOutputStream out) {
+    public static void efetuaReserva(ServerUser usr, DataInputStream in, DataOutputStream out) {
         try {
             int numCidades = in.readInt();
             var percurso = new ArrayList<>(numCidades);
@@ -145,6 +144,7 @@ public class Server {
             String origem = (String) iter.next();
             String destino = null;
             LocalDate currentDate = ini;
+            int idReserva ;
 
             while (iter.hasNext() && currentDate.isBefore(fi)) {
                 if (destino != null) {
@@ -160,27 +160,34 @@ public class Server {
                 if (todosData != null && todosData.values().stream().anyMatch(v -> v.getCapacidade() == 0)) {
                     currentDate = currentDate.plusDays(1);
                 } else {
-                    efetuaReserva(voosPercurso, currentDate);
-                    break;
+                    Set<Voo> actualVoos = reservaVoos(voosPercurso,currentDate);
+                    Reserva res = new Reserva(usr,actualVoos);
+                    reservas.put(res.getId(),res);
+                    Reply.Success.serialize(out);
+                    out.writeInt(res.getId());
+                    return;
                 }
             }
+            if(currentDate.isAfter(fi)) {
+                Reply.Failure.serialize(out);
+            }
 
-            // if (!currentDate.isBefore(fi)) throw new ViagemImpossivelException();
-            // se chegamos aqui é porque uma data deu e teo suma lista de voos passiveis de serem reservados
-
-            // efetuar à reserva
-
-
-            //if( voo != null) {
-            //    Reply.Codigo.serialize(out);
-            //    out.writeInt(voo.getID());
-            //}
-            //else {
-            //    Reply.Failure.serialize(out);
-            //}
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static Set<Voo> reservaVoos(Set<VooTabelado> percurso, LocalDate currentDate) {
+        var todosData = voosUsados.get(currentDate);
+        for (var tabelado : percurso) {
+            Voo v = todosData.get(tabelado);
+            if(v == null) {
+                v = new Voo(currentDate,tabelado);
+                todosData.put(tabelado, v);
+            }
+            v.diminuiCapacidade();
+        }
+        return (Set<Voo>) todosData.values();
     }
 
     private static boolean isBetween(LocalDate currentDate, LocalDate ini, LocalDate fi) {
@@ -201,10 +208,10 @@ public class Server {
     public static void mudaCapacidade(DataInputStream in, DataOutputStream out) {
         // TODO
     }
-    public static void encerraDia(DataInputStream in, DataOutputStream out) {
+    public static void encerraDia(ServerUser usr, DataInputStream in, DataOutputStream out) {
         // TODO
     }
-    public static void listaVoos(DataInputStream in, DataOutputStream out) {
+    public static void listaVoos(ServerUser usr, DataInputStream in, DataOutputStream out) {
         try {
             out.writeInt(voosTabelados.size());
             for(VooTabelado v : voosTabelados.values()) {
@@ -216,7 +223,7 @@ public class Server {
         }
     }
 
-    public static void cancelaReserva(DataInputStream dataInputStream, DataOutputStream dataOutputStream) {
+    public static void cancelaReserva(ServerUser usr , DataInputStream dataInputStream, DataOutputStream dataOutputStream) {
         int id = 0;
         try {
             id = dataInputStream.readInt();
@@ -233,7 +240,7 @@ public class Server {
         }
     }
 
-    public static void adicionaVoo(DataInputStream in, DataOutputStream out) {
+    public static void adicionaVoo(ServerUser usr , DataInputStream in, DataOutputStream out) {
         try {
             VooTabelado v = VooTabelado.deserialize(in);
             voosTabelados.put(new OrigemDestino(v.getOrigem(),v.getDestino()), v);
@@ -274,26 +281,16 @@ public class Server {
         return percursos;
     }
 
-    public static void fazLogout(DataInputStream in, DataOutputStream out) {
-            try {
-                String username = in.readUTF();
-                System.out.println("User: " + username + " logged out: ");
-                ServerUser sus = users.get(username);
-                if(sus != null && sus.isAuthenticated()){
-                    Reply.Success.serialize(out);
-                }
-                else {
-                    Reply.Failure.serialize(out);
-                }
-            }
-            catch (IOException e) {
-                Reply.InvalidFormat.serialize(out);
-            }
+    public static void fazLogout(ServerUser serverUser ,DataInputStream in, DataOutputStream out) {
+        if(serverUser != null && serverUser.isAuthenticated()){
+            System.out.println("User: " + serverUser.getUserName() + " logged out: ");
+            Reply.Success.serialize(out);
+        }
+        else {
+            Reply.Failure.serialize(out);
+        }
     }
 
-    private static void efetuaReserva(Set<VooTabelado> voosPercurso, LocalDate currentDate) {
-
-    }
 
 
     //private static Voo getVooDisponivel(VooTabelado tabelado, LocalDate ini, LocalDate fi) {
