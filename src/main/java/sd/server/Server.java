@@ -37,14 +37,14 @@ public class Server {
         users.put("admin",new ServerUser("admin","password", true));
         users.put("matilde", new ServerUser("matilde","bravo", false));
         voosTabelados = new HashMap<>();
-        VooTabelado voo1 = new VooTabelado("Londres", "Amsterdão", 2500);
-        VooTabelado voo2 = new VooTabelado("Berlim", "Lisboa", 2500);
-        VooTabelado voo3 = new VooTabelado("Itália", "Lisboa", 2500 );
-        VooTabelado voo4 = new VooTabelado("Porto", "Itália", 2500);
-        VooTabelado voo5 = new VooTabelado("Itália", "França", 2500 );
-        VooTabelado voo6 = new VooTabelado("França", "Lisboa", 2500 );
-        VooTabelado voo7 = new VooTabelado("Porto", "Lisboa", 2500);
-        VooTabelado voo8 = new VooTabelado("França", "Itália", 2500 );
+        VooTabelado voo1 = new VooTabelado("Londres", "Amsterdão", 4);
+        VooTabelado voo2 = new VooTabelado("Berlim", "Lisboa", 1);
+        VooTabelado voo3 = new VooTabelado("Roma", "Lisboa", 2 );
+        VooTabelado voo4 = new VooTabelado("Porto", "Veneza", 50);
+        VooTabelado voo5 = new VooTabelado("Roma", "Paris", 300 );
+        VooTabelado voo6 = new VooTabelado("Paris", "Lisboa", 100 );
+        VooTabelado voo7 = new VooTabelado("Porto", "Lisboa", 4);
+        VooTabelado voo8 = new VooTabelado("Paris", "Roma", 2 );
         voosTabelados.put(new OrigemDestino(voo1),voo1);
         voosTabelados.put(new OrigemDestino(voo2),voo2);
         voosTabelados.put(new OrigemDestino(voo3),voo3);
@@ -167,12 +167,14 @@ public class Server {
             while (!currentDate.isAfter(fi)) {
                 allAvailable = true;
                 Map<VooTabelado, Voo> todosData = voosUsados.get(currentDate);
-                for (VooTabelado v : voosPercurso) {
-                    Voo v2 = todosData.get(v);
-                    if (v2 != null && v2.getCapacidade() <= 0) {
-                        allAvailable = false;
-                        // sair do ciclo interior, ir para proxima data
-                        break;
+                if(todosData != null) {
+                    for (VooTabelado v : voosPercurso) {
+                        Voo v2 = todosData.get(v);
+                        if (v2 != null && v2.getCapacidade() <= 0) {
+                            allAvailable = false;
+                            // sair do ciclo interior, ir para proxima data
+                            break;
+                        }
                     }
                 }
                 if(allAvailable) {
@@ -183,7 +185,7 @@ public class Server {
             if(allAvailable) {
                 // acrescenta ao map das reservas os que faltam
                 Set<Voo> actualVoos = reservaVoos(voosPercurso,currentDate);
-                Reserva res = new Reserva(usr,actualVoos);
+                Reserva res = new Reserva(usr.getClientUser(),actualVoos);
                 reservas.put(res.getId(),res);
                 Reply.Success.serialize(out);
                 out.writeInt(res.getId());
@@ -250,13 +252,13 @@ public class Server {
         int id = 0;
         try {
             id = dataInputStream.readInt();
-            // TODO verificar se pretence ao user
             Reserva r = reservas.get(id);
-            if(r == null)
-                Reply.Failure.serialize(dataOutputStream);
-            else {
+            if(r != null && r.getClientUser().equals(usr.getClientUser())) {
                 reservas.remove(id);
                 Reply.Success.serialize(dataOutputStream);
+            }
+            else {
+                Reply.Failure.serialize(dataOutputStream);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -314,6 +316,22 @@ public class Server {
         }
     }
 
+    public static void mostraReservas(ServerUser serverUser, DataInputStream in, DataOutputStream out) {
+        try {
+            Reply.Success.serialize(out);
+            Set<Reserva> reservasUser = reservas.values()
+                    .stream()
+                    .filter(r -> r.getClientUser().equals(serverUser.getClientUser()))
+                    .collect(Collectors.toSet());
+            out.writeInt(reservasUser.size());
+            for(Reserva r : reservasUser) {
+                r.serialize(out);
+            }
+        }
+        catch (IOException e) {
+            Reply.Failure.serialize(out);
+        }
+    }
 
 
     //private static Voo getVooDisponivel(VooTabelado tabelado, LocalDate ini, LocalDate fi) {

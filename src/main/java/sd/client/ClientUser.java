@@ -13,6 +13,10 @@ public class ClientUser {
         this.username = username;
         this.password = password;
     }
+    private ClientUser(String username ) {
+        this.username = username;
+        this.password = null;
+    }
 
     public void serialize(DataOutputStream out) throws IOException {
             out.writeUTF(username);
@@ -20,6 +24,12 @@ public class ClientUser {
     }
     public static ClientUser deserialize(DataInputStream in) throws IOException {
         return new ClientUser(in.readUTF(),in.readUTF());
+    }
+    public void serializeWithoutPassword(DataOutputStream out) throws IOException {
+        out.writeUTF(username);
+    }
+    public static ClientUser deserealizeWithoutPasswd(DataInputStream in) throws IOException {
+        return new ClientUser(in.readUTF());
     }
 
     public String getUserName() {

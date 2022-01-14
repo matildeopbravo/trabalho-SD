@@ -139,6 +139,10 @@ public class Menu {
                 } catch (NoSuchElementException e) {
                     ClientUI.changeScanner();
                 }
+                catch (NumberFormatException e) {
+                    ClientUI.showError("Invalid Format");
+
+                }
                 // ctrl-d por exemplo
                 catch (IndexOutOfBoundsException e) {
                     return;
@@ -213,4 +217,5 @@ public class Menu {
         } while (op == -1);
         return op;
     }
+
 }

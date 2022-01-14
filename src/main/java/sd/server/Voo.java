@@ -18,14 +18,12 @@ public class Voo {
         this.data = data;
         this.vooTabelado = vooTabelado;
     }
-
-    //public static Voo deserialize(DataInputStream in) throws IOException {
-    //    return new Voo(in.readInt(), in.readUTF(),in.readUTF(),in.readLong(),LocalDate.parse(in.readUTF()));
-    //}
-
-    //public static Voo deserializeWithoutID(DataInputStream in) throws IOException {
-    //    return new Voo(in.readUTF(),in.readUTF(),in.readLong(),LocalDate.parse(in.readUTF()));
-    //}
+    private Voo(int id, long capacidade , LocalDate data, VooTabelado vooTabelado) {
+        this.id = id;
+        this.capacidade = capacidade;
+        this.data = data;
+        this.vooTabelado = vooTabelado;
+    }
 
     public int getID() {
         return id;
@@ -56,5 +54,19 @@ public class Voo {
 
     public void diminuiCapacidade() {
         capacidade--;
+    }
+
+    public void serialize(DataOutputStream out) throws IOException {
+        out.writeInt(id);
+        out.writeLong(capacidade);
+        out.writeUTF(data.toString());
+        vooTabelado.serialize(out);
+    }
+    public static Voo deserialize(DataInputStream in) throws IOException {
+        int id = in.readInt();
+        long capacidade = in.readLong();
+        LocalDate data = LocalDate.parse(in.readUTF());
+        var voo = VooTabelado.deserialize(in);
+        return new Voo(id,capacidade,data,voo);
     }
 }

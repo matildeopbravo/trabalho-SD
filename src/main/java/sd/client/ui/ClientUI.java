@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 
 public class ClientUI {
     public static final String ANSI_RESET = "\u001B[0m";
@@ -43,13 +44,13 @@ public class ClientUI {
     }
 
     private void menuPrincipal() {
-        Menu menu = new Menu(new String[]{
+         Menu menu = new Menu(new String[]{
                 "Registar",
                 "Login",
                 "Logout",
                 "Efetuar Reserva",
                 "Cancelar Reserva",
-                "Lista Reservas",
+                "Minhas Reservas",
                 "Lista de voos",
                 "Adiciona Voo",
                 "Encerra Dia",
@@ -60,7 +61,7 @@ public class ClientUI {
         menu.setPreCondition(3, client::isAutenticado);
         menu.setPreCondition(4, client::isAutenticado);
         menu.setPreCondition(5, client::isAutenticado);
-        menu.setPreCondition(6, () -> client.isAutenticado() && client.isAdmin());
+        menu.setPreCondition(6, client::isAutenticado);
         menu.setPreCondition(7, client::isAutenticado);
         menu.setPreCondition(8, () -> client.isAutenticado() && client.isAdmin());
         menu.setPreCondition(9, () -> client.isAutenticado() && client.isAdmin());
@@ -79,25 +80,46 @@ public class ClientUI {
     }
 
     private void efetuarReserva() {
-        System.out.print("Locais de Passagem Separados Por Vírgula: ");
-        String locais = scin.nextLine();
-        System.out.print("Data Inicial (D/M/Y) : ");
-        LocalDate dataInit = LocalDate.parse(scin.nextLine(),formatter);
-        System.out.print("Data Final (D/M/Y) : ");
-        LocalDate dataFin = LocalDate.parse(scin.nextLine(),formatter);
+        String locais = prettyReadLine("Locais de Passagem Separados Por Vírgula: ");
+        LocalDate dataInit = LocalDate.parse(prettyReadLine("Data Inicial (D/M/Y) : "),formatter);
+        LocalDate dataFin = LocalDate.parse(prettyReadLine("Data Final (D/M/Y) : "),formatter);
 
         try {
-            int res  = client.efetuaReserva(List.of(locais),dataInit,dataFin);
-            System.out.println("Reserva Nº " + res);
+            int res  = client.efetuaReserva(List.of(locais.split(",")),dataInit,dataFin);
+            if(res == -1) {
+                System.out.println("Reserva Não Pode ser realizada");
+            }
+            else {
+                System.out.println("Reserva Nº " + res);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    private void mostraVoo(Set<Voo> voos) {
+        Table<Voo> tabelaReservas = new Table<>();
+        tabelaReservas.addColumn("ID", v -> Integer.toString(v.getId()));
+        tabelaReservas.addColumn("Origem", Voo::getOrigem);
+        tabelaReservas.addColumn("Destino",Voo::getDestino);
+        tabelaReservas.addColumn("Capacidade", v -> {
+            long capacidade = v.getVooTabelado().getCapacidade();
+            return Long.toString(v.getCapacidade()) + "/" + capacidade;
+        });
+        tabelaReservas.addColumn("Data", v -> String.valueOf(v.getData()));
+        tabelaReservas.addItems(voos);
+        tabelaReservas.show();
+    }
     private void listaReservas() {
-            List<Reserva> l = client.pedeListaReservas();
-            l.forEach(System.out::println);
-
+        Set<Reserva> l = client.pedeListaReservas();
+        if(l == null)
+            System.out.println("no reservas");
+        else{
+            for(var r : l) {
+                System.out.println("Reserva Nº " + r.getId());
+                mostraVoo(r.getVoos());
+            }
+        }
     }
 
     private void logout() {
@@ -109,7 +131,10 @@ public class ClientUI {
             System.out.println("Tem que estar autenticado para fazer logout");
         }
     }
-     private String prettyReadLine(String prompt, String color, boolean password) {
+    public static void showError(String e) {
+        System.out.println(ClientUI.ANSI_BOLD + ClientUI.ANSI_RED + e + ClientUI.ANSI_RESET);
+    }
+    private String prettyReadLine(String prompt, String color, boolean password) {
         System.out.print(ClientUI.ANSI_BOLD + color + "❯ " + ClientUI.ANSI_RESET + ClientUI.ANSI_BOLD +
                 prompt + ": " + ClientUI.ANSI_RESET);
         if (password) {
@@ -150,7 +175,7 @@ public class ClientUI {
         boolean start = true;
         do {
             if (!start)
-                System.out.println(ANSI_BOLD + ANSI_RED + "Não é possível cancelar essa reserva" + ANSI_RESET);
+                showError("Não é possível cancelar essa reserva" );
 
             start = false;
             num = Integer.parseInt(prettyReadLine("Número da reserva"));

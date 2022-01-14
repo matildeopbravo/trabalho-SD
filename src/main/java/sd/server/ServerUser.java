@@ -6,6 +6,7 @@ import sd.client.ClientUser;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 public class ServerUser {
     private final ClientUser user;
@@ -24,15 +25,7 @@ public class ServerUser {
         this.isAdmin = isAdmin;
     }
 
-    //public void serialize(DataOutputStream out) throws IOException {
-    //    user.serialize(out);
-    //    out.writeBoolean(isAuthenticated);
-    //    out.writeBoolean(isAdmin);
-    //}
-    //public static ServerUser deserialize(DataInputStream in) throws IOException {
-    //    ClientUser usr = ClientUser.deserialize(in);
-    //    return new ServerUser(usr);
-    //}
+    public ClientUser getClientUser(){return user;}
 
     public String getUserName() {
         return user.getUserName();
@@ -52,5 +45,18 @@ public class ServerUser {
 
     public boolean isAuthenticated() {
         return isAuthenticated;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ServerUser that = (ServerUser) o;
+        return isAuthenticated == that.isAuthenticated && isAdmin == that.isAdmin && Objects.equals(user, that.user);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(user, isAuthenticated, isAdmin);
     }
 }

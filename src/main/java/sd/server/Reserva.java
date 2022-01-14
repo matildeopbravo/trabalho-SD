@@ -1,24 +1,29 @@
 package sd.server;
 
+import sd.client.ClientUser;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 public class Reserva {
     private static int lastCodigo = -1;
 
     private int codigoReserva;
-    private ServerUser usr;
+    private ClientUser usr;
     private Set<Voo> voos;
 
-    public Reserva(ServerUser usr, Set<Voo> voos ) {
+    public Reserva(ClientUser usr, Set<Voo> voos ) {
         this.usr = usr;
         this.codigoReserva = ++lastCodigo;
+        this.voos = voos;
+    }
+    private Reserva(int id, ClientUser usr, Set<Voo> voos ) {
+        this.usr = usr;
+        this.codigoReserva = id;
         this.voos = voos;
     }
 
@@ -26,21 +31,31 @@ public class Reserva {
         return codigoReserva;
     }
 
-    //public void serialize(DataOutputStream out) throws IOException {
-    //    user.serialize(out);
-    //    out.writeInt(voos.size());
-    //    for (Voo v : voos) {
-    //        v.serialize(out);
-    //    }
-    //}
+    public void serialize(DataOutputStream out) throws IOException {
+        out.writeInt(codigoReserva);
+        usr.serializeWithoutPassword(out);
+        out.writeInt(voos.size());
+        for (Voo v : voos) {
+               v.serialize(out);
+        }
+    }
+    public static Reserva deserialize(DataInputStream in) throws IOException {
+        int id = in.readInt();
+        var userName = ClientUser.deserealizeWithoutPasswd(in);
 
-    //public static Reserva deserialize(DataInputStream in) throws IOException {
-    //    ServerUser user = ServerUser.deserialize();
-    //    int size = in.readInt();
-    //    List<Voo> voos = new ArrayList<>(size);
-    //    for(int i = 0; i < size ; i++) {
-    //        voos.add(Voo.deserialize(in));
-    //    }
-    //    return new Reserva(user,voos);
-    //}
+        int size = in.readInt();
+        var voos = new HashSet<Voo>(size);
+        for(int i = 0; i < size; i++){
+            voos.add(Voo.deserialize(in));
+        }
+        return new Reserva(id,userName,voos);
+    }
+
+    public ClientUser getClientUser() {
+        return usr;
+    }
+
+    public Set<Voo> getVoos() {
+        return voos;
+    }
 }
