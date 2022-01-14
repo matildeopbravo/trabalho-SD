@@ -12,6 +12,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Server {
     private ServerSocket serverSocket;
@@ -52,6 +53,7 @@ public class Server {
         voosTabelados.put(new OrigemDestino(voo6),voo6);
         voosTabelados.put(new OrigemDestino(voo7),voo7);
         voosTabelados.put(new OrigemDestino(voo8),voo8);
+        reservas = new HashMap<>();
 
         voosUsados = new HashMap<>();
         addVooUsado(voo1, LocalDate.now());
@@ -134,6 +136,7 @@ public class Server {
             int numCidades = in.readInt();
             var percurso = new ArrayList<>(numCidades);
             for (int i = 0; i < numCidades; i++) {
+                System.out.println("Read cidade");
                 percurso.add(in.readUTF());
             }
             LocalDate ini = LocalDate.parse(in.readUTF());
@@ -143,32 +146,49 @@ public class Server {
             Iterator<Object> iter = percurso.iterator();
             String origem = (String) iter.next();
             String destino = null;
-            LocalDate currentDate = ini;
-            int idReserva ;
 
-            while (iter.hasNext() && currentDate.isBefore(fi)) {
+
+            while (iter.hasNext()) {
                 if (destino != null) {
                     origem = destino;
                 }
                 destino = (String) iter.next();
                 OrigemDestino o = new OrigemDestino(origem, destino);
                 VooTabelado tabelado = voosTabelados.get(o);
-                voosPercurso.add(tabelado);
-                if (tabelado == null) Reply.Failure.serialize(out);
-                Map<VooTabelado, Voo> todosData = voosUsados.get(currentDate);
-                // algum nao esta disponivel
-                if (todosData != null && todosData.values().stream().anyMatch(v -> v.getCapacidade() == 0)) {
-                    currentDate = currentDate.plusDays(1);
-                } else {
-                    Set<Voo> actualVoos = reservaVoos(voosPercurso,currentDate);
-                    Reserva res = new Reserva(usr,actualVoos);
-                    reservas.put(res.getId(),res);
-                    Reply.Success.serialize(out);
-                    out.writeInt(res.getId());
+                if (tabelado == null) {
+                    Reply.Failure.serialize(out);
                     return;
+                } else {
+                    voosPercurso.add(tabelado);
                 }
             }
-            if(currentDate.isAfter(fi)) {
+            LocalDate currentDate = ini;
+            boolean allAvailable = true;
+            while (!currentDate.isAfter(fi)) {
+                allAvailable = true;
+                Map<VooTabelado, Voo> todosData = voosUsados.get(currentDate);
+                for (VooTabelado v : voosPercurso) {
+                    Voo v2 = todosData.get(v);
+                    if (v2 != null && v2.getCapacidade() <= 0) {
+                        allAvailable = false;
+                        // sair do ciclo interior, ir para proxima data
+                        break;
+                    }
+                }
+                if(allAvailable) {
+                    break;
+                }
+                currentDate = currentDate.plusDays(1);
+            }
+            if(allAvailable) {
+                // acrescenta ao map das reservas os que faltam
+                Set<Voo> actualVoos = reservaVoos(voosPercurso,currentDate);
+                Reserva res = new Reserva(usr,actualVoos);
+                reservas.put(res.getId(),res);
+                Reply.Success.serialize(out);
+                out.writeInt(res.getId());
+            }
+            else {
                 Reply.Failure.serialize(out);
             }
 
@@ -178,7 +198,9 @@ public class Server {
     }
 
     private static Set<Voo> reservaVoos(Set<VooTabelado> percurso, LocalDate currentDate) {
-        var todosData = voosUsados.get(currentDate);
+        var todosData =
+                voosUsados.computeIfAbsent(currentDate, k -> new HashMap<>());
+
         for (var tabelado : percurso) {
             Voo v = todosData.get(tabelado);
             if(v == null) {
@@ -187,7 +209,7 @@ public class Server {
             }
             v.diminuiCapacidade();
         }
-        return (Set<Voo>) todosData.values();
+        return new HashSet<>(todosData.values());
     }
 
     private static boolean isBetween(LocalDate currentDate, LocalDate ini, LocalDate fi) {
@@ -213,6 +235,7 @@ public class Server {
     }
     public static void listaVoos(ServerUser usr, DataInputStream in, DataOutputStream out) {
         try {
+            Reply.Success.serialize(out);
             out.writeInt(voosTabelados.size());
             for(VooTabelado v : voosTabelados.values()) {
                 v.serialize(out);

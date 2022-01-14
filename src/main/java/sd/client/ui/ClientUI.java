@@ -88,11 +88,7 @@ public class ClientUI {
 
         try {
             int res  = client.efetuaReserva(List.of(locais),dataInit,dataFin);
-            if (res > 0) {
-                System.out.println("Reserva Nº " + res);
-            } else {
-                System.out.println("Reserva não pode ser realizada");
-            }
+            System.out.println("Reserva Nº " + res);
         } catch (IOException e) {
             e.printStackTrace();
         }

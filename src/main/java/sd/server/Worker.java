@@ -71,7 +71,6 @@ public class Worker implements Runnable {
         finally {
             System.out.println("Client "   + ClientUI.ANSI_RED + s.getInetAddress().getHostAddress()
                     + ClientUI.ANSI_RESET + " disconnected");
-
             endConnection();
         }
     }
