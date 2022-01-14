@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 client="mvn compile exec:java -Dexec.mainClass=\"sd.client.Main\""
 server="mvn compile exec:java -Dexec.mainClass=\"sd.server.Main\""
