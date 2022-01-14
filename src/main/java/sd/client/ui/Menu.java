@@ -119,7 +119,8 @@ public class Menu {
 
         do {
             if (c.isAutenticado()) {
-                System.out.println(ClientUI.ANSI_BOLD + "User " + c.getUserAutenticado().getUserName() + " autenticado" + ClientUI.ANSI_RESET);
+                System.out.println(ClientUI.ANSI_BOLD + "User " + c.getUserAutenticado().getUserName()
+                        + " autenticado" + ClientUI.ANSI_RESET);
             } else {
                 System.out.println(ClientUI.ANSI_BOLD + "User não autenticado" + ClientUI.ANSI_RESET);
             }

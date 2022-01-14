@@ -7,8 +7,7 @@ import java.io.IOException;
 public enum Reply {
     Success,
     Failure,
-    InvalidFormat,
-    Codigo;
+    InvalidFormat;
 
     public void serialize(DataOutputStream outputStream) {
         try {
@@ -29,6 +28,10 @@ public enum Reply {
             return Failure;
 
         }
+    }
+
+    public boolean isSuccess(){
+        return this.equals(Success);
     }
     public int getValue() {
         return -this.ordinal() - 1;

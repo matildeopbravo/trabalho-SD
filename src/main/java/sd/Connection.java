@@ -1,8 +1,5 @@
 package sd;
 
-import sd.server.Reserva;
-import sd.server.ServerUser;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.InetAddress;
