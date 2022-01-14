@@ -1,6 +1,5 @@
 package sd.client;
 
-import javafx.scene.control.Tab;
 import sd.client.ui.ClientUI;
 import sd.client.ui.Table;
 
@@ -21,7 +20,6 @@ public class Main {
             ClientUI ui = new ClientUI(address, port);
             ui.run();
         } catch (SocketException e) {
-
             System.err.println(ClientUI.ANSI_RED + "Servidor Desconectado" + ClientUI.ANSI_RESET);
         }
     }

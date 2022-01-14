@@ -12,7 +12,8 @@ import sd.server.ServerUser;
 
 public enum Operation {
     Registar(Server::registaUser),
-    Autenticar(null),
+    Login(null),
+    LogOut(Server::fazLogout),
     Reserva(Server::efetuaReserva),
     CancelaReserva(Server::cancelaReserva),
     AdicionaVoo(Server::adicionaVoo),

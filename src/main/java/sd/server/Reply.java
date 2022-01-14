@@ -19,10 +19,16 @@ public enum Reply {
         }
     }
 
-    public static Reply deserialize(DataInputStream inputStream) throws IOException {
-        Reply r = values()[getOrdinalFromFake(inputStream.readInt())];
-        System.out.println("Deserealized " + r);
-        return r;
+    public static Reply deserialize(DataInputStream inputStream) throws ArrayIndexOutOfBoundsException {
+        try {
+            Reply r = values()[getOrdinalFromFake(inputStream.readInt())];
+            System.out.println("Deserealized " + r);
+            return r;
+        }
+        catch(IOException e) {
+            return Failure;
+
+        }
     }
     public int getValue() {
         return -this.ordinal() - 1;

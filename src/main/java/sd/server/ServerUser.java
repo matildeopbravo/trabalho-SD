@@ -49,4 +49,8 @@ public class ServerUser {
     public boolean isAdmin(){
         return isAdmin;
     }
+
+    public boolean isAuthenticated() {
+        return isAuthenticated;
+    }
 }

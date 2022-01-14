@@ -6,10 +6,8 @@ import sd.exceptions.NotAdminException;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.SocketException;
 
 public class Worker implements Runnable {
     private int patience ;
@@ -41,7 +39,7 @@ public class Worker implements Runnable {
                     System.out.println(op);
 
                     System.out.println("O user pretende realizer operação: " + op);
-                    if(op.equals(Operation.Autenticar)) {
+                    if(op.equals(Operation.Login)) {
                         user = Operation.autenticaUser(in, out);
                         System.out.println("User autenticado é " + user);
                     }

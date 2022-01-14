@@ -1,6 +1,6 @@
 #!/bin/bash
 
-client="mvn compile exec:java -Dexec.mainClass=\"sd.server.Main\""
+client="mvn compile exec:java -Dexec.mainClass=\"sd.client.Main\""
 server="mvn compile exec:java -Dexec.mainClass=\"sd.server.Main\""
 args="${*:2}"
 if [ "$1" == "server" ]; then

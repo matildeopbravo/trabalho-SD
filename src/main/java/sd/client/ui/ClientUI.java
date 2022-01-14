@@ -2,8 +2,7 @@ package sd.client.ui;
 
 import sd.client.Client;
 import sd.exceptions.PermissionDeniedException;
-import sd.server.Reply;
-import sd.server.Voo;
+import sd.server.*;
 
 import java.io.Console;
 import java.io.IOException;
@@ -47,8 +46,10 @@ public class ClientUI {
         Menu menu = new Menu(new String[]{
                 "Registar",
                 "Login",
+                "Logout",
                 "Efetuar Reserva",
                 "Cancelar Reserva",
+                "Lista Reservas",
                 "Lista de voos",
                 "Adiciona Voo",
                 "Encerra Dia",
@@ -60,18 +61,60 @@ public class ClientUI {
         menu.setPreCondition(4, client::isAutenticado);
         menu.setPreCondition(5, client::isAutenticado);
         menu.setPreCondition(6, () -> client.isAutenticado() && client.isAdmin());
-        menu.setPreCondition(7, () -> client.isAutenticado() && client.isAdmin());
+        menu.setPreCondition(7, () -> client.isAutenticado());
+        menu.setPreCondition(8, () -> client.isAutenticado() && client.isAdmin());
+        menu.setPreCondition(9, () -> client.isAutenticado() && client.isAdmin());
         //menu.setPreCondition(2, ()->  !client.isAutenticado() );
 
         menu.setHandler(1, this::registar);
         menu.setHandler(2, this::autenticar);
-        menu.setHandler(4, this::cancelarReserva);
-        menu.setHandler(5, this::listaVoos);
-        menu.setHandler(6, this::adicionaVoo);
+        menu.setHandler(3, this::logout);
+        menu.setHandler(4, this::efetuarReserva);
+        menu.setHandler(5, this::cancelarReserva);
+        menu.setHandler(6, this::listaReservas);
+        menu.setHandler(7, this::listaVoos);
+        menu.setHandler(8, this::adicionaVoo);
+        //menu.setHandler(9, this::encerraDia);
         menu.run(client);
     }
 
-    private String prettyReadLine(String prompt, String color, boolean password) {
+    private void efetuarReserva() {
+        System.out.print("Locais de Passagem Separados Por Vírgula: ");
+        String locais = scin.nextLine();
+        String[] l = locais.split(",");
+        System.out.print("Data Inicial (D/M/Y) : ");
+        LocalDate dataInit = LocalDate.parse(scin.nextLine(),formatter);
+        System.out.print("Data Final D/M/Y) : ");
+        LocalDate dataFin = LocalDate.parse(scin.nextLine(),formatter);
+
+        try {
+            int res  = client.efetuaReserva(List.of(locais),dataInit,dataFin);
+            if (res > 0) {
+                System.out.println("Reserva Nº " + res);
+            } else {
+                System.out.println("Reserva não pode ser realizada");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void listaReservas() {
+            List<Reserva> l = client.pedeListaReservas();
+            l.forEach(System.out::println);
+
+    }
+
+    private void logout() {
+        if(client.getUserAutenticado() != null) {
+            Reply r = client.fazLogout();
+            System.out.println(r);
+        }
+        else {
+            System.out.println("Tem que estar autenticado para fazer logout");
+        }
+    }
+     private String prettyReadLine(String prompt, String color, boolean password) {
         System.out.print(ClientUI.ANSI_BOLD + color + "❯ " + ClientUI.ANSI_RESET + ClientUI.ANSI_BOLD +
                 prompt + ": " + ClientUI.ANSI_RESET);
         if (password) {
@@ -90,11 +133,13 @@ public class ClientUI {
     private void adicionaVoo() {
         String origem = prettyReadLine("Origem");
         String destino = prettyReadLine("Destino");
+        System.out.print("Capacidade: ");
         long capacidade = Long.parseLong(prettyReadLine("Capacidade"));
-        LocalDate data = LocalDate.parse(prettyReadLine("Data"), formatter);
+        //System.out.print("Data: ");
+        //LocalDate data = LocalDate.parse(scin.nextLine(), formatter);
 
         try {
-            if (client.adicionaVoo(origem, destino, capacidade, data)) {
+            if (client.adicionaVoo(origem, destino, capacidade )) {
                 System.out.println("Voo adicionado com sucesso");
             } else {
                 System.out.println("Esta funcionalidade apenas está disponivel para admins");
@@ -120,8 +165,13 @@ public class ClientUI {
 
     private void listaVoos() throws PermissionDeniedException {
         try {
-            List<Voo> l = client.pedeListaVoos();
-            l.forEach(System.out::println);
+            List<VooTabelado> l = client.pedeListaVoos();
+            Table<VooTabelado> tabelaVoos = new Table<>();
+            tabelaVoos.addColumn("Origem", VooTabelado::getOrigem);
+            tabelaVoos.addColumn("Destino", VooTabelado::getDestino);
+            tabelaVoos.addColumn("Capacidade", v -> String.valueOf(v.getCapacidade()));
+            tabelaVoos.addItems(l);
+            tabelaVoos.show();
         } catch (IOException e) {
             e.printStackTrace();
         }
