@@ -45,4 +45,8 @@ public abstract class ClientPacket {
 
         return p;
     }
+
+    public int getId() {
+        return this.id;
+    }
 }

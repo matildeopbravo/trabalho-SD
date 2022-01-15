@@ -1,5 +1,7 @@
 package sd.packets.server;
 
+import sd.Pair;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -31,5 +33,9 @@ public class ReservaEfetuadaReply extends ServerReply {
     protected void writeTo(DataOutputStream out) throws IOException {
         out.writeInt(reserva);
         out.writeUTF(data.toString());
+    }
+
+    public Pair<Integer, LocalDate> getPair() {
+        return new Pair<>(reserva, data);
     }
 }

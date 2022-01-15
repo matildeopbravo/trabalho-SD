@@ -38,4 +38,8 @@ public class ListaReservasReply extends ServerReply {
             r.serialize(out);
         }
     }
+
+    public Set<Reserva> getReservas() {
+        return reservas;
+    }
 }

@@ -26,4 +26,8 @@ public class UserAutenticadoReply extends ServerReply {
     protected void writeTo(DataOutputStream out) throws IOException {
         out.writeBoolean(this.isAdmin);
     }
+
+    public boolean getIsAdmin() {
+        return isAdmin;
+    }
 }

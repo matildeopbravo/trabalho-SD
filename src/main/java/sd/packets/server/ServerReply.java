@@ -66,6 +66,14 @@ public abstract class ServerReply {
         }
     }
 
+    public int getId() {
+        return this.id;
+    }
+
+    public Status getStatus() {
+        return this.status;
+    }
+
     abstract ServerPacketType getType();
     protected abstract void writeTo(DataOutputStream out) throws IOException;
 }

@@ -39,4 +39,8 @@ public class ListaVoosReply extends ServerReply {
             v.serialize(out);
         }
     }
+
+    public List<VooTabelado> getVoos() {
+        return voos;
+    }
 }
