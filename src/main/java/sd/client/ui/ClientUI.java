@@ -124,7 +124,7 @@ public class ClientUI {
         tabelaReservas.addColumn("Destino", Voo::getDestino);
         tabelaReservas.addColumn("Capacidade", v -> {
             long capacidade = v.getVooTabelado().getCapacidade();
-            return Long.toString(v.getCapacidade()) + "/" + capacidade;
+            return v.getCapacidade() + "/" + capacidade;
         });
         tabelaReservas.addColumn("Data", v -> String.valueOf(v.getData()));
         tabelaReservas.addItems(voos);
