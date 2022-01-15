@@ -16,7 +16,7 @@ public class ListaReservasPacket extends ClientPacket {
     }
 
     @Override
-    Operation getType() {
+    public Operation getType() {
         return Operation.ListaReservas;
     }
 

@@ -1,9 +1,14 @@
 package sd.server;
 
+import sd.Operation;
 import sd.OrigemDestino;
+import sd.client.Client;
 import sd.client.ClientUser;
 import sd.client.ui.ClientUI;
+import sd.exceptions.UnexpectedPacketTypeException;
+import sd.packets.client.*;
 
+import javax.swing.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -86,10 +91,13 @@ public class Server {
             }
         }
     }
-    public static void registaUser(ServerUser usr, DataInputStream in, DataOutputStream out) {
+    public static void registaUser(ServerUser usr, ClientPacket clientPacket, DataOutputStream out) {
         System.out.println("Recebido pedido de registar user");
         try {
-            ClientUser us = ClientUser.deserialize(in);
+            if (!clientPacket.getType().equals(Operation.Registar))
+                throw new UnexpectedPacketTypeException();
+            RegistarPacket registarPacket = (RegistarPacket) clientPacket;
+            ClientUser us = new ClientUser(registarPacket.getUsername(), registarPacket.getPassword());
             System.out.println("User: " + us.getUserName() + " password: "+ us.getPassword());
             if(users.containsKey(us.getUserName())) {
                 System.out.println("Uitlizador já existe");
@@ -101,15 +109,18 @@ public class Server {
                 Reply.Success.serialize(out);
             }
         }
-        catch (IOException e) {
+        catch (UnexpectedPacketTypeException e) {
             Reply.InvalidFormat.serialize(out);
         }
     }
 
-    public static ServerUser autenticaUser(DataInputStream in, DataOutputStream out) {
+    public static ServerUser autenticaUser(ClientPacket clientPacket, DataOutputStream out) {
         ServerUser serverUser = null;
         try {
-            ClientUser clientUser = ClientUser.deserialize(in);
+            if (!clientPacket.getType().equals(Operation.Login))
+                throw new UnexpectedPacketTypeException();
+            LoginPacket loginPacket = (LoginPacket)clientPacket;
+            ClientUser clientUser = new ClientUser(loginPacket.getUsername(), loginPacket.getPassword());
             serverUser = users.get(clientUser.getUserName());
             if(serverUser != null && serverUser.getPassword().equals(clientUser.getPassword())) {
                 Reply.Success.serialize(out);
@@ -117,7 +128,7 @@ public class Server {
                 serverUser.setIsAuthenticated(true);
                 return serverUser;
             }
-        } catch (IOException e) {
+        } catch (IOException | UnexpectedPacketTypeException e) {
             e.printStackTrace();
         }
         Reply.Failure.serialize(out);
@@ -131,20 +142,19 @@ public class Server {
 
     }
 
-    public static void efetuaReserva(ServerUser usr, DataInputStream in, DataOutputStream out) {
+    public static void efetuaReserva(ServerUser usr, ClientPacket clientPacket, DataOutputStream out) {
         try {
-            int numCidades = in.readInt();
-            var percurso = new ArrayList<>(numCidades);
-            for (int i = 0; i < numCidades; i++) {
-                System.out.println("Read cidade");
-                percurso.add(in.readUTF());
-            }
-            LocalDate ini = LocalDate.parse(in.readUTF());
-            LocalDate fi = LocalDate.parse(in.readUTF());
+            if (!clientPacket.getType().equals(Operation.Reserva))
+                throw new UnexpectedPacketTypeException();
+            ReservaPacket reservaPacket = (ReservaPacket) clientPacket;
+            List<String> percurso = reservaPacket.getCidades();
+            System.out.println("Read these cities: " + percurso.toString());
+            LocalDate ini = reservaPacket.getDataInicial();
+            LocalDate fi = reservaPacket.getDataFinal();
             Set<VooTabelado> voosPercurso = new HashSet<>();
 
-            Iterator<Object> iter = percurso.iterator();
-            String origem = (String) iter.next();
+            Iterator<String> iter = percurso.iterator();
+            String origem = iter.next();
             String destino = null;
 
 
@@ -152,7 +162,7 @@ public class Server {
                 if (destino != null) {
                     origem = destino;
                 }
-                destino = (String) iter.next();
+                destino = iter.next();
                 OrigemDestino o = new OrigemDestino(origem, destino);
                 VooTabelado tabelado = voosTabelados.get(o);
                 if (tabelado == null) {
@@ -195,7 +205,7 @@ public class Server {
                 Reply.Failure.serialize(out);
             }
 
-        } catch (IOException e) {
+        } catch (IOException | UnexpectedPacketTypeException e) {
             e.printStackTrace();
         }
     }
@@ -233,10 +243,10 @@ public class Server {
     public static void mudaCapacidade(DataInputStream in, DataOutputStream out) {
         // TODO
     }
-    public static void encerraDia(ServerUser usr, DataInputStream in, DataOutputStream out) {
+    public static void encerraDia(ServerUser usr, ClientPacket clientPacket, DataOutputStream out) {
         // TODO
     }
-    public static void listaVoos(ServerUser usr, DataInputStream in, DataOutputStream out) {
+    public static void listaVoos(ServerUser usr, ClientPacket clientPacket, DataOutputStream out) {
         try {
             Reply.Success.serialize(out);
             out.writeInt(voosTabelados.size());
@@ -249,10 +259,12 @@ public class Server {
         }
     }
 
-    public static void cancelaReserva(ServerUser usr , DataInputStream dataInputStream, DataOutputStream dataOutputStream) {
-        int id = 0;
+    public static void cancelaReserva(ServerUser usr, ClientPacket clientPacket, DataOutputStream dataOutputStream) {
         try {
-            id = dataInputStream.readInt();
+            if (!clientPacket.getType().equals(Operation.CancelaReserva))
+                throw new UnexpectedPacketTypeException();
+            CancelaReservaPacket cancelaReservaPacket = (CancelaReservaPacket) clientPacket;
+            int id = cancelaReservaPacket.getIdReserva();
             Reserva r = reservas.get(id);
             if(r != null && r.getClientUser().equals(usr.getClientUser())) {
                 reservas.remove(id);
@@ -261,30 +273,36 @@ public class Server {
             else {
                 Reply.Failure.serialize(dataOutputStream);
             }
-        } catch (IOException e) {
+        } catch (UnexpectedPacketTypeException e) {
             e.printStackTrace();
         }
     }
 
-    public static void adicionaVoo(ServerUser usr , DataInputStream in, DataOutputStream out) {
+    public static void adicionaVoo(ServerUser usr , ClientPacket clientPacket, DataOutputStream out) {
         try {
-            VooTabelado v = VooTabelado.deserialize(in);
+            if (!clientPacket.getType().equals(Operation.AdicionaVoo))
+                throw new UnexpectedPacketTypeException();
+            AdicionaVooPacket adicionaVooPacket = (AdicionaVooPacket) clientPacket;
+            VooTabelado v = adicionaVooPacket.getVooTabelado();
             voosTabelados.put(new OrigemDestino(v.getOrigem(),v.getDestino()), v);
             System.out.println("Adicionado novo voo");
             Reply.Success.serialize(out);
-        } catch (IOException e) {
+        } catch (UnexpectedPacketTypeException e) {
             Reply.Failure.serialize(out);
             e.printStackTrace();
         }
 
     }
 
-    public static void percursosPossiveis(ServerUser serverUser, DataInputStream dataInputStream,
+    public static void percursosPossiveis(ServerUser serverUser, ClientPacket clientPacket,
                                           DataOutputStream outputStream) {
 
         try {
-            var percursos = percursosPossiveis(dataInputStream.readUTF(),
-                    dataInputStream.readUTF(),2);
+            if (!clientPacket.getType().equals(Operation.PercursosPossiveis))
+                throw new UnexpectedPacketTypeException();
+            TodosPercursosPacket todosPercursosPacket = (TodosPercursosPacket) clientPacket;
+            var percursos = percursosPossiveis(todosPercursosPacket.getOrigem(),
+                    todosPercursosPacket.getDestino());
             if(percursos.isEmpty()) {
                 Reply.Failure.serialize(outputStream);
                 return;
@@ -299,12 +317,12 @@ public class Server {
                     outputStream.writeUTF(v);
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | UnexpectedPacketTypeException e) {
             e.printStackTrace();
         }
 
     }
-    private List<List<String>> percursosPossiveis(String origem, String destino) {
+    private static List<List<String>> percursosPossiveis(String origem, String destino) {
         return percursosPossiveis(origem, destino, 3);
     }
 
@@ -331,7 +349,7 @@ public class Server {
         return percursos;
     }
 
-    public static void fazLogout(ServerUser serverUser ,DataInputStream in, DataOutputStream out) {
+    public static void fazLogout(ServerUser serverUser, ClientPacket clientPacket, DataOutputStream out) {
         if(serverUser != null && serverUser.isAuthenticated()){
             System.out.println("User: " + serverUser.getUserName() + " logged out: ");
             Reply.Success.serialize(out);
@@ -341,7 +359,7 @@ public class Server {
         }
     }
 
-    public static void mostraReservas(ServerUser serverUser, DataInputStream in, DataOutputStream out) {
+    public static void mostraReservas(ServerUser serverUser, ClientPacket clientPacket, DataOutputStream out) {
         try {
             Reply.Success.serialize(out);
             Set<Reserva> reservasUser = reservas.values()

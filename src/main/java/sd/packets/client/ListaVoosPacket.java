@@ -16,7 +16,7 @@ public class ListaVoosPacket extends ClientPacket {
     }
 
     @Override
-    Operation getType() {
+    public Operation getType() {
         return Operation.ListaVoos;
     }
 

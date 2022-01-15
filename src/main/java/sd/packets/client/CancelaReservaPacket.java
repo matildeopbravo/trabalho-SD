@@ -9,6 +9,10 @@ import java.io.IOException;
 public class CancelaReservaPacket extends ClientPacket {
     private int idReserva;
 
+    public int getIdReserva() {
+        return this.idReserva;
+    }
+
     public CancelaReservaPacket(int id) {
         super();
         this.idReserva = id;
@@ -20,7 +24,7 @@ public class CancelaReservaPacket extends ClientPacket {
     }
 
     @Override
-    Operation getType() {
+    public Operation getType() {
         return Operation.CancelaReserva;
     }
 

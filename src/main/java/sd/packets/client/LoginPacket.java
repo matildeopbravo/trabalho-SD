@@ -24,7 +24,7 @@ public class LoginPacket extends ClientPacket {
     }
 
     @Override
-    Operation getType() {
+    public Operation getType() {
         return Operation.Login;
     }
 

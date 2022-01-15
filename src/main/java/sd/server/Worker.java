@@ -3,6 +3,7 @@ package sd.server;
 import sd.Operation;
 import sd.client.ui.ClientUI;
 import sd.exceptions.NotAdminException;
+import sd.packets.client.ClientPacket;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -33,14 +34,13 @@ public class Worker implements Runnable {
         try {
             while(!s.isClosed() && patience > 0) {
                 try {
-                    int n = in.readInt();
-                    System.out.println("read :" + n);
-                    Operation op = Operation.getFromFakeOrdinal(n);
-                    System.out.println(op);
+                    ClientPacket clientPacket = ClientPacket.deserialize(in);
+                    Operation op = clientPacket.getType();
+                    System.out.println("Got operation packet: " + op);
 
                     System.out.println("O user pretende realizer operação: " + op);
                     if(op.equals(Operation.Login)) {
-                        user = Operation.autenticaUser(in, out);
+                        user = Operation.autenticaUser(clientPacket, out);
                         if(user == null ) System.out.println("credenciais invalidas");
                         else {
                             System.out.println("User autenticado é " + user);
@@ -53,7 +53,7 @@ public class Worker implements Runnable {
                             handleFailure();
                             continue;
                         }
-                        callMethodIfPossible(op);
+                        callMethodIfPossible(clientPacket);
                     }
                 }
                 catch (ArrayIndexOutOfBoundsException e) {
@@ -80,8 +80,9 @@ public class Worker implements Runnable {
         patience--;
     }
 
-    private void callMethodIfPossible(Operation op) throws NotAdminException {
-        op.callHandleMethod(user,in,out);
+    private void callMethodIfPossible(ClientPacket clientPacket) throws NotAdminException {
+        Operation op = clientPacket.getType();
+        op.callHandleMethod(user,clientPacket,out);
         if(user != null && !user.isAdmin() && op.isAdminOption()) {
             throw new NotAdminException();
         }

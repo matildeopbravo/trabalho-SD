@@ -21,7 +21,7 @@ public class EncerramentoPacket extends ClientPacket {
     }
 
     @Override
-    Operation getType() {
+    public Operation getType() {
         return Operation.Encerramento;
     }
 

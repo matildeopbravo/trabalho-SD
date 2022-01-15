@@ -10,6 +10,10 @@ import java.io.IOException;
 public class AdicionaVooPacket extends ClientPacket {
     private final VooTabelado vooTabelado;
 
+    public VooTabelado getVooTabelado() {
+        return this.vooTabelado;
+    }
+
     public AdicionaVooPacket(VooTabelado vooTabelado) {
         super();
         this.vooTabelado = vooTabelado;
@@ -21,7 +25,7 @@ public class AdicionaVooPacket extends ClientPacket {
     }
 
     @Override
-    Operation getType() {
+    public Operation getType() {
         return Operation.AdicionaVoo;
     }
 

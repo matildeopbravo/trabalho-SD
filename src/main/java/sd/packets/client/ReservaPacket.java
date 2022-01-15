@@ -12,6 +12,19 @@ import java.util.List;
 public class ReservaPacket extends ClientPacket {
     private final List<String> cidades;
     private final LocalDate dataInicial;
+
+    public List<String> getCidades() {
+        return cidades;
+    }
+
+    public LocalDate getDataInicial() {
+        return dataInicial;
+    }
+
+    public LocalDate getDataFinal() {
+        return dataFinal;
+    }
+
     private final LocalDate dataFinal;
 
     public ReservaPacket(List<String> cidades, LocalDate dataInicial, LocalDate dataFinal) {
@@ -34,7 +47,7 @@ public class ReservaPacket extends ClientPacket {
     }
 
     @Override
-    Operation getType() {
+    public Operation getType() {
         return Operation.Reserva;
     }
 

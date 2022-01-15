@@ -1,6 +1,7 @@
 package sd;
 
 
+import sd.packets.client.ClientPacket;
 import sd.server.Server;
 import sd.server.ServerUser;
 
@@ -20,9 +21,9 @@ public enum Operation {
     ListaReservas(Server::mostraReservas),
     PercursosPossiveis(Server::percursosPossiveis);
 
-    private TriConsumer<ServerUser, DataInputStream, DataOutputStream> action;
+    private TriConsumer<ServerUser, ClientPacket, DataOutputStream> action;
 
-    Operation(TriConsumer<ServerUser, DataInputStream, DataOutputStream> action) {
+    Operation(TriConsumer<ServerUser, ClientPacket, DataOutputStream> action) {
         this.action = action;
     }
 
@@ -31,12 +32,12 @@ public enum Operation {
         output.writeInt(this.getValue());
     }
 
-    public void callHandleMethod(ServerUser susr, DataInputStream in, DataOutputStream out) {
-        this.action.accept(susr, in, out);
+    public void callHandleMethod(ServerUser susr, ClientPacket clientPacket, DataOutputStream out) {
+        this.action.accept(susr, clientPacket, out);
     }
 
-    public static ServerUser autenticaUser(DataInputStream in, DataOutputStream out) {
-        return Server.autenticaUser(in, out);
+    public static ServerUser autenticaUser(ClientPacket clientPacket, DataOutputStream out) {
+        return Server.autenticaUser(clientPacket, out);
     }
 
     public boolean isAdminOption() {

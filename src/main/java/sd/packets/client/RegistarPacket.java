@@ -24,7 +24,7 @@ public class RegistarPacket extends ClientPacket {
     }
 
     @Override
-    Operation getType() {
+    public Operation getType() {
         return Operation.Registar;
     }
 

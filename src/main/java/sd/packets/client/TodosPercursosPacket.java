@@ -21,7 +21,7 @@ public class TodosPercursosPacket extends ClientPacket {
     }
 
     @Override
-    Operation getType() {
+    public Operation getType() {
         return Operation.PercursosPossiveis;
     }
 

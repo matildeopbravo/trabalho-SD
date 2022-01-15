@@ -10,7 +10,7 @@ import java.util.Random;
 public abstract class ClientPacket {
     private int id;
 
-    abstract Operation getType();
+    public abstract Operation getType();
 
     protected ClientPacket() {
         // Protected, serve só para chamar com super() nas subclasses
@@ -18,7 +18,7 @@ public abstract class ClientPacket {
     }
 
     public void serialize(DataOutputStream out) throws IOException {
-        out.writeInt(getType().getValue());
+        getType().serialize(out);
         out.writeInt(id);
         this.writeTo(out);
     }

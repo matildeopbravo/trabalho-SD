@@ -15,7 +15,7 @@ public class LogOutPacket extends ClientPacket {
     }
 
     @Override
-    Operation getType() {
+    public Operation getType() {
         return Operation.LogOut;
     }
 
