@@ -6,22 +6,23 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class PedeListaVoosPacket extends ClientPacket {
-    public PedeListaVoosPacket() {
+public class ListaReservasPacket extends ClientPacket {
+    public ListaReservasPacket() {
         super();
     }
 
-    public static PedeListaVoosPacket from(DataInputStream in) {
-        return new PedeListaVoosPacket();
+    public static ListaReservasPacket from(DataInputStream in) {
+        return new ListaReservasPacket();
     }
 
     @Override
     Operation getType() {
-        return Operation.ListaVoos;
+        return Operation.ListaReservas;
     }
 
     @Override
     protected void writeTo(DataOutputStream out) throws IOException {
         // Pacote vazio
     }
+
 }

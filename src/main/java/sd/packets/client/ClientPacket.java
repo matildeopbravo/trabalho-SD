@@ -37,11 +37,10 @@ public abstract class ClientPacket {
             case CancelaReserva -> CancelaReservaPacket.from(in);
             case AdicionaVoo -> AdicionaVooPacket.from(in);
             case Encerramento -> EncerramentoPacket.from(in);
-            case ListaVoos -> PedeListaVoosPacket.from(in);
-            case ListaReservas -> null; // TODO
-            case PercursosPossiveis -> null; // TODO
+            case ListaVoos -> ListaVoosPacket.from(in);
+            case ListaReservas -> ListaReservasPacket.from(in);
+            case PercursosPossiveis -> TodosPercursosPacket.from(in);
         };
-
         p.id = id;
 
         return p;
