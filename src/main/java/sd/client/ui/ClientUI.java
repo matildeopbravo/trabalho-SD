@@ -1,9 +1,11 @@
 package sd.client.ui;
 
-import sd.OrigemDestino;
 import sd.client.Client;
 import sd.exceptions.PermissionDeniedException;
-import sd.server.*;
+import sd.server.Reply;
+import sd.server.Reserva;
+import sd.server.Voo;
+import sd.server.VooTabelado;
 
 import java.io.Console;
 import java.io.IOException;
@@ -12,7 +14,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.function.Function;
 
 public class ClientUI {
     public static final String ANSI_RESET = "\u001B[0m";
@@ -46,7 +47,7 @@ public class ClientUI {
     }
 
     private void menuPrincipal() {
-         Menu menu = new Menu(new String[]{
+        Menu menu = new Menu(new String[]{
                 "Registar",
                 "Login",
                 "Logout",
@@ -78,7 +79,7 @@ public class ClientUI {
         menu.setHandler(6, this::listaReservas);
         menu.setHandler(7, this::listaVoos);
         menu.setHandler(8, this::adicionaVoo);
-        //menu.setHandler(9, this::encerraDia);
+        menu.setHandler(9, this::encerraDia);
         menu.setHandler(10, this::percursosPossiveis);
         menu.run(client);
     }
@@ -87,9 +88,9 @@ public class ClientUI {
         String origem = prettyReadLine("Origem");
         String destino = prettyReadLine("Destino");
         int n = 1;
-        List<List<String>> percursos = client.percursosPossiveis(origem,destino);
-        for(var p : percursos) {
-            System.out.println(ANSI_BOLD + "\nPercurso " + n+++ "\n" + ANSI_RESET);
+        List<List<String>> percursos = client.percursosPossiveis(origem, destino);
+        for (var p : percursos) {
+            System.out.println(ANSI_BOLD + "\nPercurso " + n++ + "\n" + ANSI_RESET);
             Table<String> tabelaReservas = new Table<>();
             tabelaReservas.addColumn("Cidade", c -> c);
             tabelaReservas.addItems(p);
@@ -100,15 +101,14 @@ public class ClientUI {
 
     private void efetuarReserva() {
         String locais = prettyReadLine("Locais de Passagem Separados Por Vírgula: ");
-        LocalDate dataInit = LocalDate.parse(prettyReadLine("Data Inicial (D/M/Y) : "),formatter);
-        LocalDate dataFin = LocalDate.parse(prettyReadLine("Data Final (D/M/Y) : "),formatter);
+        LocalDate dataInit = LocalDate.parse(prettyReadLine("Data Inicial (D/M/Y) : "), formatter);
+        LocalDate dataFin = LocalDate.parse(prettyReadLine("Data Final (D/M/Y) : "), formatter);
 
         try {
-            var res  = client.efetuaReserva(List.of(locais.split(",")),dataInit,dataFin);
-            if(res == null) {
+            var res = client.efetuaReserva(List.of(locais.split(",")), dataInit, dataFin);
+            if (res == null) {
                 System.out.println("Reserva Não Pode ser realizada");
-            }
-            else {
+            } else {
                 System.out.println("Reserva Nº " + res.getFirst());
                 System.out.println("Data Selecionada " + res.getSecond());
             }
@@ -121,7 +121,7 @@ public class ClientUI {
         Table<Voo> tabelaReservas = new Table<>();
         tabelaReservas.addColumn("ID", v -> Integer.toString(v.getId()));
         tabelaReservas.addColumn("Origem", Voo::getOrigem);
-        tabelaReservas.addColumn("Destino",Voo::getDestino);
+        tabelaReservas.addColumn("Destino", Voo::getDestino);
         tabelaReservas.addColumn("Capacidade", v -> {
             long capacidade = v.getVooTabelado().getCapacidade();
             return Long.toString(v.getCapacidade()) + "/" + capacidade;
@@ -130,12 +130,13 @@ public class ClientUI {
         tabelaReservas.addItems(voos);
         tabelaReservas.show();
     }
+
     private void listaReservas() {
         Set<Reserva> l = client.pedeListaReservas();
-        if(l == null)
+        if (l == null)
             System.out.println("no reservas");
-        else{
-            for(var r : l) {
+        else {
+            for (var r : l) {
                 System.out.println("Reserva Nº " + r.getId());
                 mostraVoo(r.getVoos());
             }
@@ -143,17 +144,18 @@ public class ClientUI {
     }
 
     private void logout() {
-        if(client.getUserAutenticado() != null) {
+        if (client.getUserAutenticado() != null) {
             Reply r = client.fazLogout();
             System.out.println(r);
-        }
-        else {
+        } else {
             System.out.println("Tem que estar autenticado para fazer logout");
         }
     }
+
     public static void showError(String e) {
         System.out.println(ClientUI.ANSI_BOLD + ClientUI.ANSI_RED + e + ClientUI.ANSI_RESET);
     }
+
     private String prettyReadLine(String prompt, String color, boolean password) {
         System.out.print(ClientUI.ANSI_BOLD + color + "❯ " + ClientUI.ANSI_RESET + ClientUI.ANSI_BOLD +
                 prompt + ": " + ClientUI.ANSI_RESET);
@@ -178,7 +180,7 @@ public class ClientUI {
         //LocalDate data = LocalDate.parse(scin.nextLine(), formatter);
 
         try {
-            if (client.adicionaVoo(origem, destino, capacidade )) {
+            if (client.adicionaVoo(origem, destino, capacidade)) {
                 System.out.println("Voo adicionado com sucesso");
             } else {
                 System.out.println("Esta funcionalidade apenas está disponivel para admins");
@@ -194,7 +196,7 @@ public class ClientUI {
         boolean start = true;
         do {
             if (!start)
-                showError("Não é possível cancelar essa reserva" );
+                showError("Não é possível cancelar essa reserva");
 
             start = false;
             num = Integer.parseInt(prettyReadLine("Número da reserva"));
@@ -214,6 +216,13 @@ public class ClientUI {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void encerraDia() {
+        // 1. Pegar em todos os voos desse dia
+        // 2. Cancelá-los todos
+        String dia = prettyReadLine("Dia a encerrar (D/M/Y)");
+        client.encerraDia(LocalDate.parse(dia, formatter));
     }
 
     private void autenticar() {

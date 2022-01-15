@@ -1,14 +1,12 @@
 package sd;
 
 
-import java.io.ByteArrayOutputStream;
+import sd.server.Server;
+import sd.server.ServerUser;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.function.BiConsumer;
-
-import sd.server.Server;
-import sd.server.ServerUser;
 
 public enum Operation {
     Registar(Server::registaUser),
@@ -32,23 +30,27 @@ public enum Operation {
     public void serialize(DataOutputStream output) throws IOException {
         output.writeInt(this.getValue());
     }
+
     public void callHandleMethod(ServerUser susr, DataInputStream in, DataOutputStream out) {
-            this.action.accept(susr,in,out);
+        this.action.accept(susr, in, out);
     }
-    public static ServerUser autenticaUser (DataInputStream in, DataOutputStream out) {
-            return Server.autenticaUser(in,out);
+
+    public static ServerUser autenticaUser(DataInputStream in, DataOutputStream out) {
+        return Server.autenticaUser(in, out);
     }
 
     public boolean isAdminOption() {
-        return this.equals(Encerramento)  || this.equals(AdicionaVoo) ;
-                //|| this.equals(MudaCapacidade) || this.equals(MudaDestino)
-                //|| this.equals(MudaOrigem);
+        return this.equals(Encerramento) || this.equals(AdicionaVoo);
+        //|| this.equals(MudaCapacidade) || this.equals(MudaDestino)
+        //|| this.equals(MudaOrigem);
     }
+
     public int getValue() {
-        return -this.ordinal() -  1;
+        return -this.ordinal() - 1;
     }
+
     public static int getOrdinalFromFake(int fakeValue) {
-        return -(fakeValue+1);
+        return -(fakeValue + 1);
     }
 
     public static Operation getFromFakeOrdinal(int readInt) throws ArrayIndexOutOfBoundsException {
