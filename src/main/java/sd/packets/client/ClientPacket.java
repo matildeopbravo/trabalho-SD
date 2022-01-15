@@ -38,6 +38,8 @@ public abstract class ClientPacket {
             case AdicionaVoo -> AdicionaVooPacket.from(in);
             case Encerramento -> EncerramentoPacket.from(in);
             case ListaVoos -> PedeListaVoosPacket.from(in);
+            case ListaReservas -> null; // TODO
+            case PercursosPossiveis -> null; // TODO
         };
 
         p.id = id;
