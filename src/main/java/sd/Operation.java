@@ -19,7 +19,8 @@ public enum Operation {
     AdicionaVoo(Server::adicionaVoo),
     Encerramento(Server::encerraDia),
     ListaVoos(Server::listaVoos),
-    ListaReservas(Server::mostraReservas);
+    ListaReservas(Server::mostraReservas),
+    PercursosPossiveis(Server::percursosPossiveis);
 
     private TriConsumer<ServerUser, DataInputStream, DataOutputStream> action;
 

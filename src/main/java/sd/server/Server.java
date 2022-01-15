@@ -189,6 +189,7 @@ public class Server {
                 reservas.put(res.getId(),res);
                 Reply.Success.serialize(out);
                 out.writeInt(res.getId());
+                out.writeUTF(currentDate.toString());
             }
             else {
                 Reply.Failure.serialize(out);
@@ -278,12 +279,36 @@ public class Server {
 
     }
 
-    List<List<String>> percursosPossiveis(String origem, String destino) {
+    public static void percursosPossiveis(ServerUser serverUser, DataInputStream dataInputStream,
+                                          DataOutputStream outputStream) {
+
+        try {
+            var percursos = percursosPossiveis(dataInputStream.readUTF(),
+                    dataInputStream.readUTF(),2);
+            if(percursos.isEmpty()) {
+                Reply.Failure.serialize(outputStream);
+                return;
+            }
+            else {
+                Reply.Success.serialize(outputStream);
+            }
+            outputStream.writeInt(percursos.size());
+            for(var percurso : percursos) {
+                outputStream.writeInt(percurso.size());
+                for(var v : percurso) {
+                    outputStream.writeUTF(v);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+    private List<List<String>> percursosPossiveis(String origem, String destino) {
         return percursosPossiveis(origem, destino, 3);
     }
 
-
-    List<List<String>> percursosPossiveis (String origem, String destino, int limiteVoos) {
+    private static List<List<String>> percursosPossiveis(String origem, String destino, int limiteVoos) {
         List<List<String>> percursos = new ArrayList<>();
 
         for (VooTabelado voo: voosTabelados.values()) {
@@ -332,6 +357,7 @@ public class Server {
             Reply.Failure.serialize(out);
         }
     }
+
 
 
     //private static Voo getVooDisponivel(VooTabelado tabelado, LocalDate ini, LocalDate fi) {

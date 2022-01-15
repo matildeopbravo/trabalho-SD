@@ -1,5 +1,6 @@
 package sd.client.ui;
 
+import sd.OrigemDestino;
 import sd.client.Client;
 import sd.exceptions.PermissionDeniedException;
 import sd.server.*;
@@ -11,6 +12,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.function.Function;
 
 public class ClientUI {
     public static final String ANSI_RESET = "\u001B[0m";
@@ -54,6 +56,7 @@ public class ClientUI {
                 "Lista de voos",
                 "Adiciona Voo",
                 "Encerra Dia",
+                "Percursos Possíveis",
         });
 
         // isto deixa na mesma executar a acao, so fica a vermelho se nao satisfizer a condicao
@@ -65,7 +68,7 @@ public class ClientUI {
         menu.setPreCondition(7, client::isAutenticado);
         menu.setPreCondition(8, () -> client.isAutenticado() && client.isAdmin());
         menu.setPreCondition(9, () -> client.isAutenticado() && client.isAdmin());
-        //menu.setPreCondition(2, ()->  !client.isAutenticado() );
+        menu.setPreCondition(10, client::isAutenticado);
 
         menu.setHandler(1, this::registar);
         menu.setHandler(2, this::autenticar);
@@ -76,7 +79,23 @@ public class ClientUI {
         menu.setHandler(7, this::listaVoos);
         menu.setHandler(8, this::adicionaVoo);
         //menu.setHandler(9, this::encerraDia);
+        menu.setHandler(10, this::percursosPossiveis);
         menu.run(client);
+    }
+
+    private void percursosPossiveis() {
+        String origem = prettyReadLine("Origem");
+        String destino = prettyReadLine("Destino");
+        int n = 1;
+        List<List<String>> percursos = client.percursosPossiveis(origem,destino);
+        for(var p : percursos) {
+            System.out.println(ANSI_BOLD + "\nPercurso " + n+++ "\n" + ANSI_RESET);
+            Table<String> tabelaReservas = new Table<>();
+            tabelaReservas.addColumn("Cidade", c -> c);
+            tabelaReservas.addItems(p);
+            tabelaReservas.show();
+        }
+
     }
 
     private void efetuarReserva() {
@@ -85,12 +104,13 @@ public class ClientUI {
         LocalDate dataFin = LocalDate.parse(prettyReadLine("Data Final (D/M/Y) : "),formatter);
 
         try {
-            int res  = client.efetuaReserva(List.of(locais.split(",")),dataInit,dataFin);
-            if(res == -1) {
+            var res  = client.efetuaReserva(List.of(locais.split(",")),dataInit,dataFin);
+            if(res == null) {
                 System.out.println("Reserva Não Pode ser realizada");
             }
             else {
-                System.out.println("Reserva Nº " + res);
+                System.out.println("Reserva Nº " + res.getFirst());
+                System.out.println("Data Selecionada " + res.getSecond());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -153,7 +173,6 @@ public class ClientUI {
     private void adicionaVoo() {
         String origem = prettyReadLine("Origem");
         String destino = prettyReadLine("Destino");
-        System.out.print("Capacidade: ");
         long capacidade = Long.parseLong(prettyReadLine("Capacidade"));
         //System.out.print("Data: ");
         //LocalDate data = LocalDate.parse(scin.nextLine(), formatter);
