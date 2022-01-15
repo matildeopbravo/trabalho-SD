@@ -58,5 +58,4 @@ public enum Operation {
         int real = getOrdinalFromFake(readInt);
         return Operation.values()[real];
     }
-
 }
