@@ -24,5 +24,4 @@ public class ListaReservasPacket extends ClientPacket {
     protected void writeTo(DataOutputStream out) throws IOException {
         // Pacote vazio
     }
-
 }
