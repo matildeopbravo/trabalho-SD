@@ -76,4 +76,5 @@ public abstract class ServerReply {
 
     abstract ServerPacketType getType();
     protected abstract void writeTo(DataOutputStream out) throws IOException;
+
 }

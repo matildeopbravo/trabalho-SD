@@ -2,7 +2,7 @@ package sd.client.ui;
 
 import sd.client.Client;
 import sd.exceptions.PermissionDeniedException;
-import sd.server.Reply;
+import sd.packets.server.ServerReply;
 import sd.server.Reserva;
 import sd.server.Voo;
 import sd.server.VooTabelado;
@@ -145,7 +145,7 @@ public class ClientUI {
 
     private void logout() {
         if (client.getUserAutenticado() != null) {
-            Reply r = client.fazLogout();
+            ServerReply.Status r = client.fazLogout();
             System.out.println(r);
         } else {
             System.out.println("Tem que estar autenticado para fazer logout");
@@ -200,7 +200,7 @@ public class ClientUI {
 
             start = false;
             num = Integer.parseInt(prettyReadLine("Número da reserva"));
-        } while (!client.cancelaReserva(num).equals(Reply.Success));
+        } while (!client.cancelaReserva(num).equals(ServerReply.Status.Success));
         System.out.println(ANSI_BOLD + "Reserva Nº " + num + " cancelada com sucesso!" + ANSI_RESET);
     }
 
@@ -234,7 +234,7 @@ public class ClientUI {
             username = prettyReadLine("Username");
             password = prettyReadLine("Password", ANSI_YELLOW, true);
             start = false;
-        } while (!client.autenticaUser(username, password).equals(Reply.Success));
+        } while (!client.autenticaUser(username, password).equals(ServerReply.Status.Success));
         System.out.println("exit ui method");
 
     }
@@ -245,7 +245,7 @@ public class ClientUI {
         do {
             username = prettyReadLine("Username");
             password = prettyReadLine("Password", ANSI_YELLOW, true);
-        } while (!client.registaUser(username, password).equals(Reply.Success));
+        } while (!client.registaUser(username, password).getStatus().equals(ServerReply.Status.Success));
         System.out.println("Utilizador Registado Com sucesso");
     }
 }
