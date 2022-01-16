@@ -112,4 +112,14 @@ public class Voo {
     public int hashCode() {
         return Objects.hash(id, capacidade, data, vooTabelado, capacityLock);
     }
+
+    public void aumentaCapacidade() {
+        try {
+            capacityLock.lock();
+            capacidade++;
+        }
+        finally {
+            capacityLock.unlock();
+        }
+    }
 }

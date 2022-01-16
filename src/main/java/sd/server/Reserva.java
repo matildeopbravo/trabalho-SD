@@ -14,7 +14,7 @@ public class Reserva {
 
     private int codigoReserva;
     private ClientUser usr;
-    private Set<Voo> voos;
+    private final Set<Voo> voos;
 
     public Reserva(ClientUser usr, Set<Voo> voos) {
         this.usr = usr;

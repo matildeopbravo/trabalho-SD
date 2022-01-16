@@ -280,9 +280,9 @@ public class Server {
 
     public static void listaVoos(ServerUser usr, ClientPacket clientPacket, DataOutputStream out) {
         try {
-            List<VooTabelado> voos = (List<VooTabelado>) voosTabelados.values(v -> v);
+            Set<VooTabelado> voos = (Set<VooTabelado>) voosTabelados.values(v -> v);
             ListaVoosReply reply =
-                    new ListaVoosReply(clientPacket.getId(), ServerReply.Status.Success, voos);
+                    new ListaVoosReply(clientPacket.getId(), ServerReply.Status.Success, new ArrayList<>(voos));
             reply.serialize(out);
         } catch (IOException e) {
             e.printStackTrace();
@@ -299,6 +299,7 @@ public class Server {
             StatusReply reply;
             if (r != null && r.getClientUser().equals(usr.getClientUser())) {
                 reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Success);
+                r.getVoos().forEach(Voo::aumentaCapacidade);
             } else {
                 reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Failure);
             }
