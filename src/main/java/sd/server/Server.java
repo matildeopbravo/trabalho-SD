@@ -333,7 +333,6 @@ public class Server {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-
     }
 
     public static void percursosPossiveis(ServerUser serverUser, ClientPacket clientPacket,
