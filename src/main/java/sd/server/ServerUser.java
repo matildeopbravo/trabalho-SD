@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -16,6 +17,7 @@ public class ServerUser {
     private final ClientUser user;
     private boolean isAuthenticated;
     private final boolean isAdmin ;
+    private final Lock authenticationLock;
     private final List<String> pendingNotifications;
     private final ReentrantLock notificationsLock;
     private final Condition notificationsCondition;
@@ -25,6 +27,7 @@ public class ServerUser {
         this.user = user;
         this.isAdmin = false;
         this.isAuthenticated  = false;
+        this.authenticationLock = new ReentrantLock();
         this.pendingNotifications = new ArrayList<>();
         this.notificationsLock = new ReentrantLock();
         this.notificationsCondition = notificationsLock.newCondition();
@@ -34,6 +37,7 @@ public class ServerUser {
         this.user = new ClientUser(username, password);
         this.isAuthenticated = false;
         this.isAdmin = isAdmin;
+        this.authenticationLock = new ReentrantLock();
         this.pendingNotifications = new ArrayList<>();
         this.notificationsLock = new ReentrantLock();
         this.notificationsCondition = notificationsLock.newCondition();
@@ -50,7 +54,13 @@ public class ServerUser {
     }
 
     public void  setIsAuthenticated(boolean b) {
-        this.isAuthenticated = b;
+        try {
+            authenticationLock.lock();
+            this.isAuthenticated = b;
+        }
+        finally {
+            authenticationLock.unlock();
+        }
     }
 
     public boolean isAdmin(){
@@ -58,7 +68,13 @@ public class ServerUser {
     }
 
     public boolean isAuthenticated() {
-        return isAuthenticated;
+        try {
+            authenticationLock.lock();
+            return isAuthenticated ;
+        }
+        finally {
+            authenticationLock.unlock();
+        }
     }
 
     public void addNotification(String notification) {

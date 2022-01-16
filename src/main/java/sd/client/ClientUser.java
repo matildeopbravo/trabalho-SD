@@ -6,8 +6,8 @@ import java.io.IOException;
 
 // a unica informacao sobre o user que o cliente. O servidor guarda um client user
 public class ClientUser {
-    private String username;
-    private String password;
+    private final String username;
+    private final String password;
 
     public ClientUser(String username, String password) {
         this.username = username;

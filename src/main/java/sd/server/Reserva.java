@@ -58,4 +58,9 @@ public class Reserva {
     public Set<Voo> getVoos() {
         return voos;
     }
+
+    public Reserva clone(){
+        return new Reserva(this.codigoReserva,this.usr,this.voos);
+    }
+
 }
