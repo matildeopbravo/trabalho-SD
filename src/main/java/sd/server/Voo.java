@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -99,5 +100,16 @@ public class Voo {
         capacityLock.lock();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Voo voo = (Voo) o;
+        return id == voo.id && capacidade == voo.capacidade && Objects.equals(data, voo.data) && Objects.equals(vooTabelado, voo.vooTabelado) && Objects.equals(capacityLock, voo.capacityLock);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, capacidade, data, vooTabelado, capacityLock);
+    }
 }

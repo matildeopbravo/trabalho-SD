@@ -213,7 +213,8 @@ public class Server {
             }
 
             if (allAvailable) {
-                todosData = voosUsados.computeIfAbsent(currentDate, k -> new DashMap<>());
+                var actualVoos =  new HashSet<Voo>();
+
                 for (var tabelado : voosPercurso) {
                     Voo v = todosData.get(tabelado);
                     if (v == null) {
@@ -221,12 +222,10 @@ public class Server {
                         todosData.put(tabelado, v);
                     }
                     v.diminuiCapacidade();
+                    actualVoos.add(v);
                 }
-                LocalDate finalCurrentDate = currentDate;
-                var actualVoos = todosData.values(Voo::clone)
-                        .stream()
-                        .filter(v -> v.getData().equals(finalCurrentDate)).collect(Collectors.toSet());
                 lockedVoos.forEach(Voo::unlock);
+                todosData.unlock();
                 Reserva res = new Reserva(usr.getClientUser(), actualVoos);
                 reservas.put(res.getId(), res);
                 usr.addNotification("Os seus voos foram reservados com sucesso (ID da reserva " + res.getId() + ").");

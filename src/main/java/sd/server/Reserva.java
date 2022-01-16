@@ -7,6 +7,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class Reserva {
@@ -63,4 +64,16 @@ public class Reserva {
         return new Reserva(this.codigoReserva,this.usr,this.voos);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Reserva reserva = (Reserva) o;
+        return codigoReserva == reserva.codigoReserva && Objects.equals(usr, reserva.usr) && Objects.equals(voos, reserva.voos);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(codigoReserva, usr, voos);
+    }
 }
