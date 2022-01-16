@@ -4,25 +4,31 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Voo {
    public static int lastId= -1;
-   private int id;
+   private final int id;
    private long capacidade;
-   private LocalDate data;
-   private VooTabelado vooTabelado;
+   private final LocalDate data;
+   private final VooTabelado vooTabelado;
+   private ReentrantLock capacityLock;
 
     public Voo(LocalDate data, VooTabelado vooTabelado) {
         this.id = ++lastId;
         this.capacidade = vooTabelado.getCapacidade();
         this.data = data;
         this.vooTabelado = vooTabelado;
+        this.capacityLock = new ReentrantLock();
     }
     private Voo(int id, long capacidade , LocalDate data, VooTabelado vooTabelado) {
         this.id = id;
         this.capacidade = capacidade;
         this.data = data;
         this.vooTabelado = vooTabelado;
+        this.capacityLock = new ReentrantLock();
     }
 
     public int getID() {
@@ -73,5 +79,13 @@ public class Voo {
     public Voo clone(){
         return new Voo(this.id,this.capacidade,this.data,this.vooTabelado);
     }
+
+    public void unlock(){
+        capacityLock.unlock();
+    }
+    public void lock() {
+        capacityLock.lock();
+    }
+
 
 }

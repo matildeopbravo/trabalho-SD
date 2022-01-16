@@ -16,9 +16,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
@@ -69,7 +67,6 @@ public class Server {
         voosUsados = new DashMap<>();
         addVooUsado(voo1, LocalDate.now());
         addVooUsado(voo2, LocalDate.now().minusDays(2));
-
         diasEncerrados = new HashSet<>();
         diasEncerradosLock = new ReentrantReadWriteLock();
     }
@@ -133,7 +130,8 @@ public class Server {
 
             serverUser = users.get(clientUser.getUserName());
             if (serverUser != null && serverUser.getPassword().equals(clientUser.getPassword())) {
-                UserAutenticadoReply reply = new UserAutenticadoReply(clientPacket.getId(), ServerReply.Status.Success, serverUser.isAdmin());
+                UserAutenticadoReply reply = new UserAutenticadoReply(clientPacket.getId(), ServerReply.Status.Success,
+                        serverUser.isAdmin());
                 reply.serialize(out);
                 serverUser.setIsAuthenticated(true);
                 return serverUser;
@@ -159,7 +157,7 @@ public class Server {
             System.out.println("Read these cities: " + percurso.toString());
             LocalDate ini = reservaPacket.getDataInicial();
             LocalDate fi = reservaPacket.getDataFinal();
-            Set<VooTabelado> voosPercurso = new HashSet<>();
+            List<VooTabelado> voosPercurso = new ArrayList<>();
 
             Iterator<String> iter = percurso.iterator();
             String origem = iter.next();
@@ -182,84 +180,69 @@ public class Server {
             }
             LocalDate currentDate = ini;
             diasEncerradosLock.readLock().lock();
-            try {
-                boolean allAvailable = true;
-                while (!currentDate.isAfter(fi)) {
-                    if (!diasEncerrados.contains(currentDate)) {
-                        allAvailable = true;
-                        DashMap<VooTabelado, Voo> todosData = voosUsados.get(currentDate);
-                        if (todosData != null) {
-                            for (VooTabelado v : voosPercurso) {
-                                Voo v2 = todosData.get(v);
-                                if (v2 != null && v2.getCapacidade() <= 0) {
-                                    allAvailable = false;
-                                    // sair do ciclo interior, ir para proxima data
-                                    break;
-                                }
-                            }
-                        }
-                        if (allAvailable) {
+            boolean allAvailable = true;
+            var lockedVoos = new HashSet<Voo>();
+            DashMap<VooTabelado,Voo> todosData = null;
+            while (!currentDate.isAfter(fi)) {
+                if(diasEncerrados.contains(currentDate)) {
+                    allAvailable = false;
+                    continue;
+                }
+                allAvailable = true;
+                lockedVoos.clear();
+                todosData = voosUsados.computeIfAbsent(currentDate, x -> new DashMap<>());
+                todosData.lock();
+                for (VooTabelado v : voosPercurso.stream().sorted().collect(Collectors.toList())) {
+                    Voo v2 = todosData.get(v);
+                    if (v2 != null) {
+                        v2.lock();
+                        if(v2.getCapacidade() <= 0) {
+                            allAvailable = false;
+                            v2.lock();
                             break;
                         }
+                        else {
+                            lockedVoos.add(v2);
+                        }
                     }
-                    else {
-                        allAvailable = false;
-                    }
-                    currentDate = currentDate.plusDays(1);
                 }
                 if (allAvailable) {
-                    // acrescenta ao map das reservas os que faltam
-                    Set<Voo> actualVoos = reservaVoos(voosPercurso, currentDate);
-                    Reserva res = new Reserva(usr.getClientUser(), actualVoos);
-                    reservas.put(res.getId(), res);
-                    usr.addNotification("Os seus voos foram reservados com sucesso (ID da reserva " + res.getId() + ").");
-                } else {
-                    usr.addNotification("Não foi possível reservar os voos para os dias indicados.");
+                    break;
                 }
+                else {
+                    todosData.unlock();
+                    lockedVoos.forEach(Voo::unlock);
+                }
+                currentDate = currentDate.plusDays(1);
             }
-            finally {
-                diasEncerradosLock.readLock().unlock();
+
+            if (allAvailable) {
+                todosData = voosUsados.computeIfAbsent(currentDate, k -> new DashMap<>());
+                for (var tabelado : voosPercurso) {
+                    Voo v = todosData.get(tabelado);
+                    if (v == null) {
+                        v = new Voo(currentDate, tabelado);
+                        todosData.put(tabelado, v);
+                    }
+                    v.diminuiCapacidade();
+                }
+                var actualVoos = new HashSet<>(todosData.values(Voo::clone));
+                lockedVoos.forEach(Voo::unlock);
+                Reserva res = new Reserva(usr.getClientUser(), actualVoos);
+                reservas.put(res.getId(), res);
+                usr.addNotification("O seu voo de foi reservado com sucesso (ID de reserva " + res.getId() + ").");
+            } else {
+                usr.addNotification("Os voos a reservar já atingiram a capacidade máxima.");
             }
+            diasEncerradosLock.readLock().unlock();
+
         } catch (UnexpectedPacketTypeException e) {
             e.printStackTrace();
         }
     }
 
-    private static Set<Voo> reservaVoos(Set<VooTabelado> percurso, LocalDate currentDate) {
-        var todosData =
-                voosUsados.computeIfAbsent(currentDate, k -> new DashMap<>());
-        HashSet<Voo> voosPercurso = new HashSet<>();
-
-        for (var tabelado : percurso) {
-            Voo v = todosData.get(tabelado);
-            if (v == null) {
-                v = new Voo(currentDate, tabelado);
-                todosData.put(tabelado, v);
-            }
-            v.diminuiCapacidade();
-            voosPercurso.add(v.clone());
-        }
-        return voosPercurso;
-    }
-
     private static boolean isBetween(LocalDate currentDate, LocalDate ini, LocalDate fi) {
         return currentDate.isAfter(ini) && currentDate.isBefore(fi);
-    }
-
-    private static Voo descobreVoo(ArrayList<Object> cidades, LocalDate ini, LocalDate fi) {
-        return null;
-    }
-
-    public static void mudaOrigem(DataInputStream in, DataOutputStream out) {
-        // TODO
-    }
-
-    public static void mudaDestino(DataInputStream in, DataOutputStream out) {
-        // TODO
-    }
-
-    public static void mudaCapacidade(DataInputStream in, DataOutputStream out) {
-        // TODO
     }
 
     public static void encerraDia(ServerUser usr, ClientPacket clientPacket, DataOutputStream out) {
@@ -269,36 +252,17 @@ public class Server {
             }
             EncerramentoPacket packet = (EncerramentoPacket) clientPacket;
             LocalDate data = packet.getDate();
-
-            boolean diaJaEstavaEncerrado = true;
-            diasEncerradosLock.writeLock().lock();
-            try {
-                if (!diasEncerrados.contains(data)) {
-                    diaJaEstavaEncerrado = false;
-                    diasEncerrados.add(data);
+            for (Reserva reserva: reservas.values(Reserva::clone)) {
+                if (reserva.getVoos().stream().anyMatch(v -> v.getData().equals(data))) {
+                    reservas.remove(reserva.getId());
+                    ServerUser user = users.get(reserva.getClientUser().getUserName());
+                    user.addNotification("Devido ao encerramento dos voos do dia " + data
+                            + ", a sua reserva (ID " + reserva.getId() + ") foi cancelada.");
                 }
             }
-            finally {
-                diasEncerradosLock.writeLock().unlock();
-            }
-
-            if (!diaJaEstavaEncerrado) {
-                for (Reserva reserva : reservas.values(Reserva::clone)) {
-                    if (reserva.getVoos().stream().anyMatch(v -> v.getData().equals(data))) {
-                        reservas.remove(reserva.getId());
-                        ServerUser user = users.get(reserva.getClientUser().getUserName());
-                        user.addNotification("Devido ao encerramento dos voos do dia " + data
-                                + ", a sua reserva (ID " + reserva.getId() + ") foi cancelada.");
-                    }
-                }
-                voosUsados.remove(data);
-                StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Success);
-                reply.serialize(out);
-            }
-            else {
-                StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Failure);
-                reply.serialize(out);
-            }
+            voosUsados.remove(data);
+            StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Success);
+            reply.serialize(out);
         }
         catch (IOException | UnexpectedPacketTypeException e) {
             e.printStackTrace();

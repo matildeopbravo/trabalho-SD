@@ -130,6 +130,14 @@ public class DashMap<K,V>  {
         }
     }
 
+    public void lock() {
+        lock.writeLock().lock();
+    }
+
+    public void unlock() {
+        lock.writeLock().unlock();
+    }
+
     //public Set<Map.Entry<K, V>> entrySet() {
     //    try {
     //        lock.readLock().lock();

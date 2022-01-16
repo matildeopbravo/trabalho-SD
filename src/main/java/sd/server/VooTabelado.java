@@ -3,9 +3,10 @@ package sd.server;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Objects;
 
-public class VooTabelado {
+public class VooTabelado implements Comparable<VooTabelado>{
     private final String origem;
     private final String destino;
     private final long capacidade;
@@ -54,5 +55,14 @@ public class VooTabelado {
 
     public VooTabelado clone(){
         return new VooTabelado(this.origem,this.destino,this.capacidade);
+    }
+
+    @Override
+    public int compareTo(VooTabelado other) {
+        int origem = this.origem.compareTo(other.origem);
+        if (origem != 0) return origem;
+        int destino = this.destino.compareTo(other.destino);
+        if (destino != 0) return destino;
+        return Long.compare(this.capacidade, other.capacidade);
     }
 }
