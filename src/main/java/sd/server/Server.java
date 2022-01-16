@@ -17,7 +17,9 @@ import java.net.Socket;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 public class Server {
@@ -34,7 +36,7 @@ public class Server {
     private static DashMap<Integer, Reserva> reservas;
 
     private static Set<LocalDate> diasEncerrados;
-    private static Lock diasEncerradosLock;
+    private static ReadWriteLock diasEncerradosLock;
 
     public Server(int port, String address) {
         try {
@@ -69,7 +71,7 @@ public class Server {
         addVooUsado(voo2, LocalDate.now().minusDays(2));
 
         diasEncerrados = new HashSet<>();
-        diasEncerradosLock = new ReentrantLock();
+        diasEncerradosLock = new ReentrantReadWriteLock();
     }
 
     private void addVooUsado(VooTabelado voo, LocalDate date) {
@@ -179,7 +181,7 @@ public class Server {
                 }
             }
             LocalDate currentDate = ini;
-            diasEncerradosLock.lock();
+            diasEncerradosLock.readLock().lock();
             try {
                 boolean allAvailable = true;
                 while (!currentDate.isAfter(fi)) {
@@ -216,7 +218,7 @@ public class Server {
                 }
             }
             finally {
-                diasEncerradosLock.unlock();
+                diasEncerradosLock.readLock().unlock();
             }
         } catch (UnexpectedPacketTypeException e) {
             e.printStackTrace();
@@ -269,7 +271,7 @@ public class Server {
             LocalDate data = packet.getDate();
 
             boolean diaJaEstavaEncerrado = true;
-            diasEncerradosLock.lock();
+            diasEncerradosLock.writeLock().lock();
             try {
                 if (!diasEncerrados.contains(data)) {
                     diaJaEstavaEncerrado = false;
@@ -277,7 +279,7 @@ public class Server {
                 }
             }
             finally {
-                diasEncerradosLock.unlock();
+                diasEncerradosLock.writeLock().unlock();
             }
 
             if (!diaJaEstavaEncerrado) {
