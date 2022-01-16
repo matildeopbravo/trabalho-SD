@@ -180,7 +180,11 @@ public class ClientUI {
         if (password) {
             Console console = System.console();
             if (console != null) {
-                return new String(console.readPassword());
+                char[] passwd = console.readPassword();
+                if (passwd == null)
+                    return "";
+                else
+                    return new String(passwd);
             }
         }
         return scin.nextLine();
