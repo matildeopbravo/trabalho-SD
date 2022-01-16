@@ -11,14 +11,14 @@ public class NotificacaoReply extends ServerReply {
         return this.mensagem;
     }
 
-    public NotificacaoReply(int id, Status status, String mensagem) {
-        super(id, status);
+    public NotificacaoReply(String mensagem) {
+        super(0, Status.Success);
         this.mensagem = mensagem;
     }
 
-    public static NotificacaoReply from(int id, Status status, DataInputStream in) throws IOException {
+    public static NotificacaoReply from(int id, ServerReply.Status status, DataInputStream in) throws IOException {
         String mensagem = in.readUTF();
-        return new NotificacaoReply(id, status, mensagem);
+        return new NotificacaoReply(mensagem);
     }
 
     @Override
