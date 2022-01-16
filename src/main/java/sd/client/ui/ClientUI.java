@@ -5,6 +5,7 @@ import sd.exceptions.PermissionDeniedException;
 import sd.packets.server.NotificacaoReply;
 import sd.packets.server.ServerReply;
 import sd.server.Reserva;
+import sd.server.ServerUser;
 import sd.server.Voo;
 import sd.server.VooTabelado;
 
@@ -44,7 +45,8 @@ public class ClientUI {
     public void run() {
         System.out.println("Bem Vindo Sistema De Reservas de Voos ");
         this.menuPrincipal();
-        System.out.println("Até breve...");
+        System.out.println("Signing off...");
+        client.fazLogout();
     }
 
     private void menuPrincipal() {
@@ -59,6 +61,7 @@ public class ClientUI {
                 "Adiciona Voo",
                 "Encerra Dia",
                 "Percursos Possíveis",
+                "Lista de Utilizadores"
         });
 
         menu.setPreShowHook(() -> {
@@ -85,6 +88,7 @@ public class ClientUI {
         menu.setPreCondition(8, () -> client.isAutenticado() && client.isAdmin());
         menu.setPreCondition(9, () -> client.isAutenticado() && client.isAdmin());
         menu.setPreCondition(10, client::isAutenticado);
+        menu.setPreCondition(11,() -> client.isAutenticado() && client.isAdmin());
 
         menu.setHandler(1, this::registar);
         menu.setHandler(2, this::autenticar);
@@ -96,8 +100,10 @@ public class ClientUI {
         menu.setHandler(8, this::adicionaVoo);
         menu.setHandler(9, this::encerraDia);
         menu.setHandler(10, this::percursosPossiveis);
+        menu.setHandler(11, this::listaUtilizadores);
         menu.run(client);
     }
+
 
     private void percursosPossiveis() {
         String origem = prettyReadLine("Origem");
@@ -151,6 +157,24 @@ public class ClientUI {
                 mostraVoo(r.getVoos());
             }
         }
+    }
+
+    private void listaUtilizadores() {
+        Set<ServerUser> l = null;
+        try {
+            l = client.pedeListaUsers();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (l == null) {
+            System.out.println("Nenhum User Registado");
+            return;
+        }
+        Table<ServerUser> tabelaReservas = new Table<>();
+        tabelaReservas.addColumn("Username", ServerUser::getUserName);
+        tabelaReservas.addColumn("Autenticado", v -> String.valueOf(v.isAuthenticated()));
+        tabelaReservas.addItems(l);
+        tabelaReservas.show();
     }
 
     private void logout() {
@@ -249,7 +273,7 @@ public class ClientUI {
         String username;
         String password;
         do {
-            if (!start) System.out.println("Credenciais Inválidas");
+            if (!start) System.out.println("Não É Possível Fazer Login");
             username = prettyReadLine("Username");
             password = prettyReadLine("Password", ANSI_YELLOW, true);
             start = false;

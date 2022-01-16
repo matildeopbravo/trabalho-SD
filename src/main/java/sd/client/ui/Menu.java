@@ -137,8 +137,12 @@ public class Menu {
             op = readOption();
 
             if (op > 0 && !this.disponivel.get(op - 1).validate()) {
-                // TODO: Warning
-                System.out.println("O servidor vai dar erro mas podes sempre tentar");
+                if(op == 2) {
+                    System.out.println("Já se encontra autenticado");
+                    continue;
+                }
+                else
+                    System.out.println("O servidor vai dar erro mas podes sempre tentar");
             }
 
             try {
@@ -149,7 +153,6 @@ public class Menu {
                 }
                 catch (NumberFormatException e) {
                     ClientUI.showError("Invalid Format");
-
                 }
                 // ctrl-d por exemplo
                 catch (IndexOutOfBoundsException e) {

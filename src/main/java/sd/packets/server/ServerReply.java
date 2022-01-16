@@ -18,7 +18,8 @@ public abstract class ServerReply {
         ListaPercursos,
         ReservaEfetuada,
         Notificacao,
-        TipoDeUser // isAdmin
+        TipoDeUserAutenticado, // isAdmin
+        ListaUsers
     }
 
     private final int id;
@@ -52,7 +53,8 @@ public abstract class ServerReply {
                 case ListaPercursos -> ListaPercursosReply.from(id, status, in);
                 case ReservaEfetuada -> ReservaEfetuadaReply.from(id, status, in);
                 case Notificacao -> NotificacaoReply.from(id, status, in);
-                case TipoDeUser -> UserAutenticadoReply.from(id, status, in);
+                case TipoDeUserAutenticado -> TipoUserAutenticadoReply.from(id, status, in);
+                case ListaUsers -> ListaUsersReply.from(id,status,in);
             };
         } else {
             // Classe fake que devolve o tipo certo, mas que não tem dados

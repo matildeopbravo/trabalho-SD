@@ -54,7 +54,7 @@ public class Worker implements Runnable {
                     System.out.println("O user pretende realizer operação: " + op);
                     if (op.equals(Operation.Login)) {
                         user = Operation.autenticaUser(clientPacket, out);
-                        if (user == null) System.out.println("credenciais invalidas");
+                        if (user == null) System.out.println("Não é Possível Fazer Login");
                         else {
                             stopNotificationPusher();
                             startNotificationPusher();
@@ -101,6 +101,7 @@ public class Worker implements Runnable {
     private void callMethodIfPossible(ClientPacket clientPacket) throws NotAdminException {
         Operation op = clientPacket.getType();
         op.callHandleMethod(user,clientPacket,out);
+        System.out.println("Called Method");
         if(user != null && !user.isAdmin() && op.isAdminOption()) {
             throw new NotAdminException();
         }

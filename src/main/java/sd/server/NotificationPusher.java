@@ -4,6 +4,7 @@ import sd.packets.server.NotificacaoReply;
 import sd.packets.server.ServerReply;
 
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 
 public class NotificationPusher implements Runnable{
@@ -23,11 +24,9 @@ public class NotificationPusher implements Runnable{
                 DataOutputStream out = worker.getOutput();
                 NotificacaoReply reply = new NotificacaoReply(notification);
                 reply.serialize(out);
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
-            }
-            finally {
+            } finally {
                 worker.unlockOutput();
             }
         }

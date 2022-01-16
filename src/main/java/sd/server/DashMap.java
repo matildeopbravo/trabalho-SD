@@ -113,7 +113,7 @@ public class DashMap<K,V>  {
     public Collection<V> values(Function<? super V, V> cloneFun) {
         try {
             lock.readLock().lock();
-            return map.values().stream().map(cloneFun).collect(Collectors.toList());
+            return map.values().stream().map(cloneFun).collect(Collectors.toSet());
         }
         finally {
             lock.readLock().unlock();

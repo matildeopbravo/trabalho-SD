@@ -1,9 +1,11 @@
 package sd.client;
 
+import sd.client.ui.ClientUI;
 import sd.packets.server.NotificacaoReply;
 import sd.packets.server.ServerReply;
 
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.locks.*;
@@ -84,7 +86,12 @@ public class Demultiplexer implements Runnable {
                         queueLock.unlock();
                     }
                 }
-            } catch (IOException e) {
+            }
+            catch (EOFException e) {
+                System.err.println(ClientUI.ANSI_RED + "\nServidor Desconectado" + ClientUI.ANSI_RESET);
+                break;
+            }
+            catch (IOException e) {
                 e.printStackTrace();
                 break;
             }

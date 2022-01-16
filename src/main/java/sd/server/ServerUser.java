@@ -43,6 +43,26 @@ public class ServerUser {
         this.notificationsCondition = notificationsLock.newCondition();
     }
 
+    public ServerUser(ClientUser c, boolean isAuthenticated, boolean isAdmin) {
+        this.user = c;
+        this.isAuthenticated = isAuthenticated;
+        this.isAdmin = isAdmin;
+        this.authenticationLock = new ReentrantLock();
+        this.pendingNotifications = new ArrayList<>();
+        this.notificationsLock = new ReentrantLock();
+        this.notificationsCondition = notificationsLock.newCondition();
+    }
+
+    public static ServerUser deserialize(DataInputStream in) throws IOException {
+        return new ServerUser(ClientUser.deserialize(in), in.readBoolean(),  in.readBoolean());
+    }
+
+    public void serialize(DataOutputStream out) throws IOException {
+        user.serialize(out);
+        out.writeBoolean(isAuthenticated);
+        out.writeBoolean(isAdmin);
+    }
+
     public ClientUser getClientUser(){return user;}
 
     public String getUserName() {
@@ -117,4 +137,5 @@ public class ServerUser {
     public int hashCode() {
         return Objects.hash(user, isAuthenticated, isAdmin);
     }
+
 }

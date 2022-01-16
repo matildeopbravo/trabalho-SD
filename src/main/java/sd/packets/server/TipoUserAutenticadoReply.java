@@ -4,22 +4,22 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class UserAutenticadoReply extends ServerReply {
+public class TipoUserAutenticadoReply extends ServerReply {
     private final boolean isAdmin;
 
-    public UserAutenticadoReply(int id, Status status, boolean isAdmin) {
+    public TipoUserAutenticadoReply(int id, Status status, boolean isAdmin) {
         super(id, status);
         this.isAdmin = isAdmin;
     }
 
-    public static UserAutenticadoReply from(int id, Status status, DataInputStream in) throws IOException {
+    public static TipoUserAutenticadoReply from(int id, Status status, DataInputStream in) throws IOException {
         boolean isAdmin = in.readBoolean();
-        return new UserAutenticadoReply(id, status, isAdmin);
+        return new TipoUserAutenticadoReply(id, status, isAdmin);
     }
 
     @Override
     public ServerPacketType getType() {
-        return ServerPacketType.TipoDeUser;
+        return ServerPacketType.TipoDeUserAutenticado;
     }
 
     @Override

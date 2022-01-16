@@ -19,7 +19,8 @@ public enum Operation {
     Encerramento(Server::encerraDia),
     ListaVoos(Server::listaVoos),
     ListaReservas(Server::mostraReservas),
-    PercursosPossiveis(Server::percursosPossiveis);
+    PercursosPossiveis(Server::percursosPossiveis),
+    ListaUsers(Server::listaUsers);
 
     private TriConsumer<ServerUser, ClientPacket, DataOutputStream> action;
 
@@ -41,7 +42,7 @@ public enum Operation {
     }
 
     public boolean isAdminOption() {
-        return this.equals(Encerramento) || this.equals(AdicionaVoo);
+        return this.equals(Encerramento) || this.equals(AdicionaVoo) || this.equals(ListaUsers);
         //|| this.equals(MudaCapacidade) || this.equals(MudaDestino)
         //|| this.equals(MudaOrigem);
     }

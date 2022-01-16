@@ -41,6 +41,7 @@ public abstract class ClientPacket {
             case ListaVoos -> ListaVoosPacket.from(in);
             case ListaReservas -> ListaReservasPacket.from(in);
             case PercursosPossiveis -> TodosPercursosPacket.from(in);
+            case ListaUsers -> ListaUsersPacket.from(in);
         };
         p.id = id;
 

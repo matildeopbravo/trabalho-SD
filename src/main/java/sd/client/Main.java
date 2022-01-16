@@ -16,11 +16,7 @@ public class Main {
             if (args.length > 1)
                 port = Integer.parseInt(args[1]);
         }
-        try {
-            ClientUI ui = new ClientUI(address, port);
-            ui.run();
-        } catch (SocketException e) {
-            System.err.println(ClientUI.ANSI_RED + "Servidor Desconectado" + ClientUI.ANSI_RESET);
-        }
+        ClientUI ui = new ClientUI(address, port);
+        ui.run();
     }
 }

@@ -8,7 +8,6 @@ import sd.exceptions.UnexpectedPacketTypeException;
 import sd.packets.client.*;
 import sd.packets.server.*;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -129,20 +128,19 @@ public class Server {
             ClientUser clientUser = new ClientUser(loginPacket.getUsername(), loginPacket.getPassword());
 
             serverUser = users.get(clientUser.getUserName());
-            if (serverUser != null && serverUser.getPassword().equals(clientUser.getPassword())) {
-                UserAutenticadoReply reply = new UserAutenticadoReply(clientPacket.getId(), ServerReply.Status.Success,
+            if(serverUser == null || serverUser.isAuthenticated()) {
+                StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Failure);
+                reply.serialize(out);
+                return null;
+            }
+            if (serverUser.getPassword().equals(clientUser.getPassword())) {
+                TipoUserAutenticadoReply reply = new TipoUserAutenticadoReply(clientPacket.getId(), ServerReply.Status.Success,
                         serverUser.isAdmin());
                 reply.serialize(out);
                 serverUser.setIsAuthenticated(true);
                 return serverUser;
             }
         } catch (IOException | UnexpectedPacketTypeException e) {
-            e.printStackTrace();
-        }
-        StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Failure);
-        try {
-            reply.serialize(out);
-        } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
@@ -393,6 +391,7 @@ public class Server {
     public static void fazLogout(ServerUser serverUser, ClientPacket clientPacket, DataOutputStream out) {
         try {
             if (serverUser != null && serverUser.isAuthenticated()) {
+                serverUser.setIsAuthenticated(false);
                 System.out.println("User: " + serverUser.getUserName() + " logged out: ");
                 StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Success);
                 reply.serialize(out);
@@ -415,6 +414,16 @@ public class Server {
             ListaReservasReply reply =
                     new ListaReservasReply(clientPacket.getId(), ServerReply.Status.Success, reservasUser);
             reply.serialize(out);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void listaUsers(ServerUser serverUser, ClientPacket clientPacket, DataOutputStream outputStream) {
+        ListaUsersReply reply =
+                new ListaUsersReply(clientPacket.getId(), ServerReply.Status.Success, (Set<ServerUser>) users.values(v -> v));
+        try {
+            reply.serialize(outputStream);
         } catch (IOException e) {
             e.printStackTrace();
         }
