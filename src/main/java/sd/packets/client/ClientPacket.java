@@ -14,7 +14,8 @@ public abstract class ClientPacket {
 
     protected ClientPacket() {
         // Protected, serve só para chamar com super() nas subclasses
-        this.id = new Random().nextInt();
+        // Fazer +1 garante que não temos de nos preocupar com o id ser 0 e colidir com notificações
+        this.id = new Random().nextInt() + 1;
     }
 
     public void serialize(DataOutputStream out) throws IOException {

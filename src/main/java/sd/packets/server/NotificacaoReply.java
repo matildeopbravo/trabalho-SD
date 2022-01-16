@@ -1,12 +1,8 @@
 package sd.packets.server;
 
-import com.sun.net.httpserver.Authenticator;
-import sd.Pair;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.time.LocalDate;
 
 public class NotificacaoReply extends ServerReply {
     private final String mensagem;
@@ -26,7 +22,7 @@ public class NotificacaoReply extends ServerReply {
     }
 
     @Override
-    ServerPacketType getType() {
+    public ServerPacketType getType() {
         return ServerPacketType.Notificacao;
     }
 

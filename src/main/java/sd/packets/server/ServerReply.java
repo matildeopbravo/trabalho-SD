@@ -58,7 +58,7 @@ public abstract class ServerReply {
             // Classe fake que devolve o tipo certo, mas que não tem dados
             return new ServerReply(id, status) {
                 @Override
-                ServerPacketType getType() {
+                public ServerPacketType getType() {
                     return type;
                 }
 
@@ -76,7 +76,7 @@ public abstract class ServerReply {
         return this.status;
     }
 
-    abstract ServerPacketType getType();
+    public abstract ServerPacketType getType();
     protected abstract void writeTo(DataOutputStream out) throws IOException;
 
 }
