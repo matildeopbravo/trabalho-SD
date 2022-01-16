@@ -30,6 +30,7 @@ public class Main {
             System.out.println("Autentica user: " + testAutenticaUser(client1, client2));
             System.out.println("Regista user: " + testRegistaUser(client1, client2));
             System.out.println("Efetua reserva: " + testReserva(client1, client2));
+            System.out.println("Deadlock da reserva: " + testDeadlock(client1, client2));
         } catch (IOException | InterruptedException e) {
             System.err.println(ClientUI.ANSI_RED + "\nServidor Desconectado" + ClientUI.ANSI_RESET);
         }
@@ -132,5 +133,58 @@ public class Main {
         t1.join(); t2.join();
 
         return successes.get() == 1;
+    }
+
+    private static boolean testDeadlock(Client client1, Client client2) throws InterruptedException {
+        AtomicInteger successes = new AtomicInteger();
+
+        Thread t1 = new Thread(() -> {
+            try {
+                client1.efetuaReserva(List.of("Porto", "Lisboa", "Porto"), LocalDate.now(), LocalDate.now().plusDays(1));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            List<NotificacaoReply> notificacoes = client1.getNotificacoes();
+            while (notificacoes.size() == 0) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ignored) {
+                }
+                notificacoes = client1.getNotificacoes();
+            }
+
+            System.out.println("Notificação: " + notificacoes.get(0).getMensagem());
+            if (notificacoes.get(0).getMensagem().startsWith("Os seus voos")) {
+                successes.getAndIncrement();
+            }
+        });
+
+        Thread t2 = new Thread(() -> {
+            try {
+                client2.efetuaReserva(List.of("Lisboa", "Porto", "Lisboa"), LocalDate.now(), LocalDate.now());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            List<NotificacaoReply> notificacoes = client2.getNotificacoes();
+            while (notificacoes.size() == 0) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ignored) {
+                }
+                notificacoes = client2.getNotificacoes();
+            }
+
+            System.out.println("Notificação: " + notificacoes.get(0).getMensagem());
+            if (notificacoes.get(0).getMensagem().startsWith("Os seus voos")) {
+                successes.getAndIncrement();
+            }
+        });
+
+        t1.start(); t2.start();
+        t1.join(); t2.join();
+
+        return successes.get() == 2;
     }
 }

@@ -5,17 +5,16 @@ import sd.Operation;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.Random;
 
 public abstract class ClientPacket {
     private int id;
+    private static int lastId = 1;
 
     public abstract Operation getType();
 
     protected ClientPacket() {
         // Protected, serve só para chamar com super() nas subclasses
-        // Fazer +1 garante que não temos de nos preocupar com o id ser 0 e colidir com notificações
-        this.id = new Random().nextInt() + 1;
+        this.id = lastId++;
     }
 
     public void serialize(DataOutputStream out) throws IOException {
