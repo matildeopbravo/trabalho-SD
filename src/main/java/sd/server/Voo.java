@@ -69,4 +69,9 @@ public class Voo {
         var voo = VooTabelado.deserialize(in);
         return new Voo(id,capacidade,data,voo);
     }
+
+    public Voo clone(){
+        return new Voo(this.id,this.capacidade,this.data,this.vooTabelado);
+    }
+
 }

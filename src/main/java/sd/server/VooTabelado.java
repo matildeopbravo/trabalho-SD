@@ -3,13 +3,12 @@ package sd.server;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Objects;
 
 public class VooTabelado {
-    private String origem;
-    private String destino;
-    private long capacidade;
+    private final String origem;
+    private final String destino;
+    private final long capacidade;
 
 
     public VooTabelado(String origem, String destino, long capacidade) {
@@ -51,5 +50,9 @@ public class VooTabelado {
     @Override
     public int hashCode() {
         return Objects.hash(origem, destino, capacidade);
+    }
+
+    public VooTabelado clone(){
+        return new VooTabelado(this.origem,this.destino,this.capacidade);
     }
 }

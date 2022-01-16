@@ -25,7 +25,7 @@ public class ReservaEfetuadaReply extends ServerReply {
     }
 
     @Override
-    ServerPacketType getType() {
+    public ServerPacketType getType() {
         return ServerPacketType.ReservaEfetuada;
     }
 

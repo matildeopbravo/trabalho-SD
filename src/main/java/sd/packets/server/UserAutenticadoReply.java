@@ -18,8 +18,8 @@ public class UserAutenticadoReply extends ServerReply {
     }
 
     @Override
-    ServerPacketType getType() {
-        return ServerPacketType.UserAutenticado;
+    public ServerPacketType getType() {
+        return ServerPacketType.TipoDeUser;
     }
 
     @Override

@@ -21,15 +21,15 @@ import java.util.stream.Collectors;
 public class Server {
     private ServerSocket serverSocket;
     // username -> info
-    private static HashMap<String, ServerUser> users;
+    private static DashMap<String, ServerUser> users;
     // nao sao todos os voos que existem mas sao os que têm reservas até agora
     // Map<Tabelado, Map<Data,Voo>>
-    private static HashMap<LocalDate, Map<VooTabelado, Voo>> voosUsados;
+    private static DashMap<LocalDate, DashMap<VooTabelado, Voo>> voosUsados;
     // conjunto de voos que acontecem diariamente, sobre os quais pode haver uma reserva
     // (origem,destino) -> vooTabelado
-    private static HashMap<OrigemDestino, VooTabelado> voosTabelados;
+    private static DashMap<OrigemDestino, VooTabelado> voosTabelados;
     // idReserva -> Reserva
-    private static HashMap<Integer, Reserva> reservas;
+    private static DashMap<Integer, Reserva> reservas;
 
     public Server(int port, String address) {
         try {
@@ -37,10 +37,10 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        users = new HashMap<>();
+        users = new DashMap<>();
         users.put("admin", new ServerUser("admin", "password", true));
         users.put("matilde", new ServerUser("matilde", "bravo", false));
-        voosTabelados = new HashMap<>();
+        voosTabelados = new DashMap<>();
         VooTabelado voo1 = new VooTabelado("Londres", "Amsterdão", 4);
         VooTabelado voo2 = new VooTabelado("Berlim", "Lisboa", 1);
         VooTabelado voo3 = new VooTabelado("Roma", "Lisboa", 2);
@@ -57,22 +57,16 @@ public class Server {
         voosTabelados.put(new OrigemDestino(voo6), voo6);
         voosTabelados.put(new OrigemDestino(voo7), voo7);
         voosTabelados.put(new OrigemDestino(voo8), voo8);
-        reservas = new HashMap<>();
+        reservas = new DashMap<>();
 
-        voosUsados = new HashMap<>();
+        voosUsados = new DashMap<>();
         addVooUsado(voo1, LocalDate.now());
         addVooUsado(voo2, LocalDate.now().minusDays(2));
     }
 
     private void addVooUsado(VooTabelado voo, LocalDate date) {
-        var value = voosUsados.get(date);
-        if (value == null) {
-            var m = new HashMap<VooTabelado, Voo>();
-            m.put(voo, new Voo(date, voo));
-            voosUsados.put(date, m);
-        } else {
-            value.put(voo, new Voo(date, voo));
-        }
+        var value = voosUsados.computeIfAbsent(date, k -> new DashMap<>());
+        value.put(voo, new Voo(date, voo));
     }
 
     public void start() {
@@ -99,16 +93,16 @@ public class Server {
                 RegistarPacket registarPacket = (RegistarPacket) clientPacket;
                 ClientUser us = new ClientUser(registarPacket.getUsername(), registarPacket.getPassword());
                 System.out.println("User: " + us.getUserName() + " password: " + us.getPassword());
-                if (users.containsKey(us.getUserName())) {
+                ServerUser su = new ServerUser(us);
+                ServerUser registedUser = users.putIfAbsent(su.getUserName(),su);
+
+                ServerReply.Status status =  ServerReply.Status.Success;
+                if(registedUser != null){
                     System.out.println("Uitlizador já existe");
-                    StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Failure);
-                    reply.serialize(out);
-                } else {
-                    ServerUser su = new ServerUser(us);
-                    users.put(su.getUserName(), su);
-                    StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Success);
-                    reply.serialize(out);
+                    status =  ServerReply.Status.Failure;
                 }
+                StatusReply reply = new StatusReply(clientPacket.getId(), status);
+                reply.serialize(out);
             } catch (UnexpectedPacketTypeException e) {
                 StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.InvalidFormat);
                 reply.serialize(out);
@@ -126,6 +120,7 @@ public class Server {
                 throw new UnexpectedPacketTypeException();
             LoginPacket loginPacket = (LoginPacket) clientPacket;
             ClientUser clientUser = new ClientUser(loginPacket.getUsername(), loginPacket.getPassword());
+
             serverUser = users.get(clientUser.getUserName());
             if (serverUser != null && serverUser.getPassword().equals(clientUser.getPassword())) {
                 UserAutenticadoReply reply = new UserAutenticadoReply(clientPacket.getId(), ServerReply.Status.Success, serverUser.isAdmin());
@@ -143,14 +138,6 @@ public class Server {
             e.printStackTrace();
         }
         return null;
-    }
-
-    // todos os percursos para viajar entre uma origem e um destino com no maximo duas escalas (trees voos)
-    public static void obtemTodosPercursosPossiveis(DataInputStream in, DataOutputStream out) {
-        //String origem = in.readUTF();
-        //String destino = in.readUTF();
-        // TODO minimazar quantidade de dados transferidos
-
     }
 
     public static void efetuaReserva(ServerUser usr, ClientPacket clientPacket, DataOutputStream out) {
@@ -189,7 +176,7 @@ public class Server {
             boolean allAvailable = true;
             while (!currentDate.isAfter(fi)) {
                 allAvailable = true;
-                Map<VooTabelado, Voo> todosData = voosUsados.get(currentDate);
+                DashMap<VooTabelado, Voo> todosData = voosUsados.get(currentDate);
                 if (todosData != null) {
                     for (VooTabelado v : voosPercurso) {
                         Voo v2 = todosData.get(v);
@@ -226,7 +213,7 @@ public class Server {
 
     private static Set<Voo> reservaVoos(Set<VooTabelado> percurso, LocalDate currentDate) {
         var todosData =
-                voosUsados.computeIfAbsent(currentDate, k -> new HashMap<>());
+                voosUsados.computeIfAbsent(currentDate, k -> new DashMap<>());
 
         for (var tabelado : percurso) {
             Voo v = todosData.get(tabelado);
@@ -236,7 +223,7 @@ public class Server {
             }
             v.diminuiCapacidade();
         }
-        return new HashSet<>(todosData.values());
+        return new HashSet<>(todosData.values(Voo::clone));
     }
 
     private static boolean isBetween(LocalDate currentDate, LocalDate ini, LocalDate fi) {
@@ -265,7 +252,7 @@ public class Server {
 
     public static void listaVoos(ServerUser usr, ClientPacket clientPacket, DataOutputStream out) {
         try {
-            List<VooTabelado> voos = new ArrayList<>(voosTabelados.values());
+            List<VooTabelado> voos = (List<VooTabelado>) voosTabelados.values( v -> v);
             ListaVoosReply reply =
                     new ListaVoosReply(clientPacket.getId(), ServerReply.Status.Success, voos);
             reply.serialize(out);
@@ -348,7 +335,7 @@ public class Server {
     private static List<List<String>> percursosPossiveis(String origem, String destino, int limiteVoos) {
         List<List<String>> percursos = new ArrayList<>();
 
-        for (VooTabelado voo : voosTabelados.values()) {
+        for (VooTabelado voo : voosTabelados.values(v->v)) {
             if (voo.getOrigem().equals(origem)) {
                 if (voo.getDestino().equals(destino))
                     percursos.add(new ArrayList<>(Arrays.asList(origem, destino)));
@@ -386,7 +373,7 @@ public class Server {
 
     public static void mostraReservas(ServerUser serverUser, ClientPacket clientPacket, DataOutputStream out) {
         try {
-            Set<Reserva> reservasUser = reservas.values()
+            Set<Reserva> reservasUser = reservas.values(Reserva::clone)
                     .stream()
                     .filter(r -> r.getClientUser().equals(serverUser.getClientUser()))
                     .collect(Collectors.toSet());
