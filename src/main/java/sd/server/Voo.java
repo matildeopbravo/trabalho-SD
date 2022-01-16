@@ -44,7 +44,13 @@ public class Voo {
     }
 
     public long getCapacidade() {
-        return capacidade;
+        try {
+            capacityLock.lock();
+            return capacidade;
+        }
+        finally {
+            capacityLock.unlock();
+        }
     }
 
     public String getOrigem() {
@@ -59,7 +65,13 @@ public class Voo {
     }
 
     public void diminuiCapacidade() {
-        capacidade--;
+        try {
+            capacityLock.lock();
+            capacidade--;
+        }
+        finally {
+            capacityLock.unlock();
+        }
     }
 
     public void serialize(DataOutputStream out) throws IOException {

@@ -178,12 +178,12 @@ public class Server {
                     voosPercurso.add(tabelado);
                 }
             }
-            LocalDate currentDate = ini;
+            LocalDate currentDate ;
             diasEncerradosLock.readLock().lock();
-            boolean allAvailable = true;
+            boolean allAvailable = false;
             var lockedVoos = new HashSet<Voo>();
             DashMap<VooTabelado,Voo> todosData = null;
-            while (!currentDate.isAfter(fi)) {
+            for (currentDate = ini ; !currentDate.isAfter(fi) ; currentDate = currentDate.plusDays(1)) {
                 if(!diasEncerrados.contains(currentDate)) {
                     allAvailable = true;
                     lockedVoos.clear();
@@ -195,22 +195,21 @@ public class Server {
                             v2.lock();
                             if (v2.getCapacidade() <= 0) {
                                 allAvailable = false;
-                                v2.lock();
+                                v2.unlock();
                                 break;
                             } else {
                                 lockedVoos.add(v2);
                             }
                         }
                     }
+                    if (allAvailable) {
+                        break;
+                    }
+                    else {
+                        todosData.unlock();
+                        lockedVoos.forEach(Voo::unlock);
+                    }
                 }
-                if (allAvailable) {
-                    break;
-                }
-                else {
-                    todosData.unlock();
-                    lockedVoos.forEach(Voo::unlock);
-                }
-                currentDate = currentDate.plusDays(1);
             }
 
             if (allAvailable) {
@@ -223,7 +222,10 @@ public class Server {
                     }
                     v.diminuiCapacidade();
                 }
-                var actualVoos = new HashSet<>(todosData.values(Voo::clone));
+                LocalDate finalCurrentDate = currentDate;
+                var actualVoos = todosData.values(Voo::clone)
+                        .stream()
+                        .filter(v -> v.getData().equals(finalCurrentDate)).collect(Collectors.toSet());
                 lockedVoos.forEach(Voo::unlock);
                 Reserva res = new Reserva(usr.getClientUser(), actualVoos);
                 reservas.put(res.getId(), res);
@@ -250,23 +252,41 @@ public class Server {
             }
             EncerramentoPacket packet = (EncerramentoPacket) clientPacket;
             LocalDate data = packet.getDate();
-            for (Reserva reserva: reservas.values(Reserva::clone)) {
-                if (reserva.getVoos().stream().anyMatch(v -> v.getData().equals(data))) {
-                    reservas.remove(reserva.getId());
-                    ServerUser user = users.get(reserva.getClientUser().getUserName());
-                    user.addNotification("Devido ao encerramento dos voos do dia " + data
-                            + ", a sua reserva (ID " + reserva.getId() + ") foi cancelada.");
+
+            boolean diaJaEstavaEncerrado = true;
+            diasEncerradosLock.writeLock().lock();
+            try {
+                if (!diasEncerrados.contains(data)) {
+                    diaJaEstavaEncerrado = false;
+                    diasEncerrados.add(data);
                 }
             }
-            voosUsados.remove(data);
-            StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Success);
-            reply.serialize(out);
+            finally {
+                diasEncerradosLock.writeLock().unlock();
+            }
+
+            if (!diaJaEstavaEncerrado) {
+                for (Reserva reserva : reservas.values(Reserva::clone)) {
+                    if (reserva.getVoos().stream().anyMatch(v -> v.getData().equals(data))) {
+                        reservas.remove(reserva.getId());
+                        ServerUser user = users.get(reserva.getClientUser().getUserName());
+                        user.addNotification("Devido ao encerramento dos voos do dia " + data
+                                + ", a sua reserva (ID " + reserva.getId() + ") foi cancelada.");
+                    }
+                }
+                voosUsados.remove(data);
+                StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Success);
+                reply.serialize(out);
+            }
+            else {
+                StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Failure);
+                reply.serialize(out);
+            }
         }
         catch (IOException | UnexpectedPacketTypeException e) {
             e.printStackTrace();
         }
     }
-
     public static void listaVoos(ServerUser usr, ClientPacket clientPacket, DataOutputStream out) {
         try {
             List<VooTabelado> voos = (List<VooTabelado>) voosTabelados.values( v -> v);
@@ -284,15 +304,14 @@ public class Server {
                 throw new UnexpectedPacketTypeException();
             CancelaReservaPacket cancelaReservaPacket = (CancelaReservaPacket) clientPacket;
             int id = cancelaReservaPacket.getIdReserva();
-            Reserva r = reservas.get(id);
+            Reserva r = reservas.remove(id);
+            StatusReply reply;
             if (r != null && r.getClientUser().equals(usr.getClientUser())) {
-                reservas.remove(id);
-                StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Success);
-                reply.serialize(out);
+                reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Success);
             } else {
-                StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Failure);
-                reply.serialize(out);
+                reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Failure);
             }
+            reply.serialize(out);
         } catch (UnexpectedPacketTypeException | IOException e) {
             e.printStackTrace();
         }
