@@ -30,7 +30,6 @@ public class Worker implements Runnable {
     }
 
     public void run() {
-        int i = 0;
         try {
             while(!s.isClosed() && patience > 0) {
                 try {

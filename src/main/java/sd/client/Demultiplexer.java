@@ -1,5 +1,6 @@
 package sd.client;
 
+import sd.client.ui.ClientUI;
 import sd.packets.server.ServerReply;
 
 import java.io.DataInputStream;
