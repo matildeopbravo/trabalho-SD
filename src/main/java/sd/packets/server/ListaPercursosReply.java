@@ -31,7 +31,7 @@ public class ListaPercursosReply extends ServerReply {
     }
 
     @Override
-    ServerPacketType getType() {
+    public ServerPacketType getType() {
         return ServerPacketType.ListaPercursos;
     }
 

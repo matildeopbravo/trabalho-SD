@@ -13,7 +13,7 @@ public class StatusReply extends ServerReply {
     }
 
     @Override
-    ServerPacketType getType() {
+    public ServerPacketType getType() {
         return ServerPacketType.Status;
     }
 

@@ -27,7 +27,7 @@ public class ListaReservasReply extends ServerReply {
     }
 
     @Override
-    ServerPacketType getType() {
+    public ServerPacketType getType() {
         return ServerPacketType.ListaReservas;
     }
 
