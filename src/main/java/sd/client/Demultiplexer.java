@@ -17,6 +17,7 @@ public class Demultiplexer implements Runnable {
     private final DataInputStream inputStream;
     private final Deque<NotificacaoReply> notifications;
     private final ReentrantLock notificationsLock;
+    private Thread thread;
 
     public Demultiplexer(DataInputStream inputStream) {
         this.inputStream = inputStream;
@@ -46,7 +47,17 @@ public class Demultiplexer implements Runnable {
     }
 
     public void start() {
-        new Thread(this).start();
+        this.thread = new Thread(this);
+        this.thread.start();
+    }
+
+    public void kill() {
+        try {
+            this.inputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        this.thread.interrupt();
     }
 
     public List<NotificacaoReply> getNotificacoes() {
@@ -92,7 +103,6 @@ public class Demultiplexer implements Runnable {
                 break;
             }
             catch (IOException e) {
-                e.printStackTrace();
                 break;
             }
         }

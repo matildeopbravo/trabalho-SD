@@ -47,6 +47,7 @@ public class ClientUI {
         this.menuPrincipal();
         System.out.println("Signing off...");
         client.fazLogout();
+        this.client.killDemultiplexer();
     }
 
     private void menuPrincipal() {
@@ -117,13 +118,12 @@ public class ClientUI {
             tabelaReservas.addItems(p);
             tabelaReservas.show();
         }
-
     }
 
     private void efetuarReserva() {
-        String locais = prettyReadLine("Locais de Passagem Separados Por Vírgula: ");
-        LocalDate dataInit = LocalDate.parse(prettyReadLine("Data Inicial (D/M/Y) : "), formatter);
-        LocalDate dataFin = LocalDate.parse(prettyReadLine("Data Final (D/M/Y) : "), formatter);
+        String locais = prettyReadLine("Locais de Passagem Separados Por Vírgula");
+        LocalDate dataInit = LocalDate.parse(prettyReadLine("Data Inicial (D/M/Y)"), formatter);
+        LocalDate dataFin = LocalDate.parse(prettyReadLine("Data Final (D/M/Y)"), formatter);
 
         try {
             client.efetuaReserva(List.of(locais.split(",")), dataInit, dataFin);
@@ -238,7 +238,7 @@ public class ClientUI {
         System.out.println(ANSI_BOLD + "Reserva Nº " + num + " cancelada com sucesso!" + ANSI_RESET);
     }
 
-    private void listaVoos() throws PermissionDeniedException {
+    private void listaVoos() {
         try {
             List<VooTabelado> l = client.pedeListaVoos();
             if (l == null)
