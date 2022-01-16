@@ -1,5 +1,6 @@
 package sd.server;
 
+import sd.IDGenerator;
 import sd.client.ClientUser;
 
 import java.io.DataInputStream;
@@ -10,15 +11,14 @@ import java.util.Objects;
 import java.util.Set;
 
 public class Reserva {
-    private static int lastCodigo = -1;
-
+    public static IDGenerator idGen = new IDGenerator();
     private final int codigoReserva;
     private final ClientUser usr;
     private final Set<Voo> voos;
 
     public Reserva(ClientUser usr, Set<Voo> voos) {
         this.usr = usr;
-        this.codigoReserva = ++lastCodigo;
+        this.codigoReserva = idGen.nextID();
         this.voos = voos;
     }
 

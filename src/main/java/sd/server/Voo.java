@@ -1,16 +1,16 @@
 package sd.server;
 
+import sd.IDGenerator;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Objects;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Voo {
-   public static int lastId= -1;
+   public static IDGenerator idGen = new IDGenerator();
    private final int id;
    private long capacidade;
    private final LocalDate data;
@@ -18,7 +18,7 @@ public class Voo {
    private ReentrantLock capacityLock;
 
     public Voo(LocalDate data, VooTabelado vooTabelado) {
-        this.id = ++lastId;
+        this.id = idGen.nextID();
         this.capacidade = vooTabelado.getCapacidade();
         this.data = data;
         this.vooTabelado = vooTabelado;
