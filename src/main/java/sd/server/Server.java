@@ -184,25 +184,22 @@ public class Server {
             var lockedVoos = new HashSet<Voo>();
             DashMap<VooTabelado,Voo> todosData = null;
             while (!currentDate.isAfter(fi)) {
-                if(diasEncerrados.contains(currentDate)) {
-                    allAvailable = false;
-                    continue;
-                }
-                allAvailable = true;
-                lockedVoos.clear();
-                todosData = voosUsados.computeIfAbsent(currentDate, x -> new DashMap<>());
-                todosData.lock();
-                for (VooTabelado v : voosPercurso.stream().sorted().collect(Collectors.toList())) {
-                    Voo v2 = todosData.get(v);
-                    if (v2 != null) {
-                        v2.lock();
-                        if(v2.getCapacidade() <= 0) {
-                            allAvailable = false;
+                if(!diasEncerrados.contains(currentDate)) {
+                    allAvailable = true;
+                    lockedVoos.clear();
+                    todosData = voosUsados.computeIfAbsent(currentDate, x -> new DashMap<>());
+                    todosData.lock();
+                    for (VooTabelado v : voosPercurso.stream().sorted().collect(Collectors.toList())) {
+                        Voo v2 = todosData.get(v);
+                        if (v2 != null) {
                             v2.lock();
-                            break;
-                        }
-                        else {
-                            lockedVoos.add(v2);
+                            if (v2.getCapacidade() <= 0) {
+                                allAvailable = false;
+                                v2.lock();
+                                break;
+                            } else {
+                                lockedVoos.add(v2);
+                            }
                         }
                     }
                 }
@@ -230,9 +227,10 @@ public class Server {
                 lockedVoos.forEach(Voo::unlock);
                 Reserva res = new Reserva(usr.getClientUser(), actualVoos);
                 reservas.put(res.getId(), res);
-                usr.addNotification("O seu voo de foi reservado com sucesso (ID de reserva " + res.getId() + ").");
-            } else {
-                usr.addNotification("Os voos a reservar já atingiram a capacidade máxima.");
+                usr.addNotification("Os seus voos foram reservados com sucesso (ID da reserva " + res.getId() + ").");
+            }
+            else {
+                usr.addNotification("Não foi possível reservar os voos para os dias indicados.");
             }
             diasEncerradosLock.readLock().unlock();
 
