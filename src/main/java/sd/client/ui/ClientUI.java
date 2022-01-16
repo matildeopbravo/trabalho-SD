@@ -70,8 +70,7 @@ public class ClientUI {
                     System.out.println(ANSI_BOLD + "Tem " + replies.size() + " notificação:" + ANSI_RESET);
 
                 for (NotificacaoReply reply : client.getNotificacoes()) {
-                    // TODO: Mostrar isto direito
-                    System.out.println(reply.toString());
+                    System.out.println(" - " + ANSI_BOLD + reply.getMensagem() + ANSI_RESET);
                 }
            }
         });
