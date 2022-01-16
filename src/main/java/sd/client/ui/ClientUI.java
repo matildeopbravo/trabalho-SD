@@ -42,7 +42,7 @@ public class ClientUI {
         scin = new Scanner(System.in);
     }
 
-    public void run() {
+    public void run() throws  IOException{
         System.out.println("Bem Vindo Sistema De Reservas de Voos ");
         this.menuPrincipal();
         System.out.println("Signing off...");
@@ -50,7 +50,7 @@ public class ClientUI {
         this.client.killDemultiplexer();
     }
 
-    private void menuPrincipal() {
+    private void menuPrincipal() throws IOException {
         Menu menu = new Menu(new String[]{
                 "Registar",
                 "Login",
@@ -120,16 +120,12 @@ public class ClientUI {
         }
     }
 
-    private void efetuarReserva() {
+    private void efetuarReserva() throws IOException {
         String locais = prettyReadLine("Locais de Passagem Separados Por Vírgula");
         LocalDate dataInit = LocalDate.parse(prettyReadLine("Data Inicial (D/M/Y)"), formatter);
         LocalDate dataFin = LocalDate.parse(prettyReadLine("Data Final (D/M/Y)"), formatter);
 
-        try {
-            client.efetuaReserva(List.of(locais.split(",")), dataInit, dataFin);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        client.efetuaReserva(List.of(locais.split(",")), dataInit, dataFin);
         System.out.println("Pedido de reserva enviado.");
     }
 

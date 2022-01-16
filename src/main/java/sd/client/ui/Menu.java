@@ -14,7 +14,7 @@ public class Menu {
      * Functional interface para handlers.
      */
     public interface Handler {
-        void execute() throws PermissionDeniedException;
+        void execute() throws PermissionDeniedException, IOException;
     }
 
     /**
@@ -114,7 +114,7 @@ public class Menu {
      * <p>
      * Termina com a opção 0 (zero).
      */
-    public void run(Client c) {
+    public void run(Client c) throws IOException {
         int op;
 
         do {
