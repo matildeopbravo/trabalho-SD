@@ -78,6 +78,7 @@ public class Server {
     public void start() {
         System.out.println("Server listening on "
                 + serverSocket.getInetAddress().getHostAddress() + ":" + serverSocket.getLocalPort());
+        //noinspection InfiniteLoopStatement
         while (true) {
             try {
                 Socket s = serverSocket.accept();
@@ -185,7 +186,7 @@ public class Server {
                     lockedVoos.clear();
                     todosData = voosUsados.computeIfAbsent(currentDate, x -> new DashMap<>());
                     todosData.lock();
-                    for (VooTabelado v : voosPercurso.stream().sorted().collect(Collectors.toList())) {
+                    for (VooTabelado v : voosPercurso.stream().sorted().toList()) {
                         Voo v2 = todosData.get(v);
                         if (v2 != null) {
                             v2.lock();
@@ -340,15 +341,13 @@ public class Server {
             TodosPercursosPacket todosPercursosPacket = (TodosPercursosPacket) clientPacket;
             var percursos = percursosPossiveis(todosPercursosPacket.getOrigem(),
                     todosPercursosPacket.getDestino());
+            ListaPercursosReply reply;
             if (percursos.isEmpty()) {
-                ListaPercursosReply reply =
-                        new ListaPercursosReply(clientPacket.getId(), ServerReply.Status.Failure, null);
-                reply.serialize(out);
+                reply = new ListaPercursosReply(clientPacket.getId(), ServerReply.Status.Failure, null);
             } else {
-                ListaPercursosReply reply =
-                        new ListaPercursosReply(clientPacket.getId(), ServerReply.Status.Success, percursos);
-                reply.serialize(out);
+                reply = new ListaPercursosReply(clientPacket.getId(), ServerReply.Status.Success, percursos);
             }
+            reply.serialize(out);
         } catch (IOException | UnexpectedPacketTypeException e) {
             e.printStackTrace();
         }
