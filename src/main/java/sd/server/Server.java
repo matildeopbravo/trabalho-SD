@@ -52,7 +52,8 @@ public class Server {
         VooTabelado voo5 = new VooTabelado("Roma", "Paris", 300);
         VooTabelado voo6 = new VooTabelado("Paris", "Lisboa", 100);
         VooTabelado voo7 = new VooTabelado("Porto", "Lisboa", 4);
-        VooTabelado voo8 = new VooTabelado("Paris", "Roma", 2);
+        VooTabelado voo8 = new VooTabelado("Lisboa", "Porto", 4);
+        VooTabelado voo9 = new VooTabelado("Paris", "Roma", 2);
         voosTabelados.put(new OrigemDestino(voo1), voo1);
         voosTabelados.put(new OrigemDestino(voo2), voo2);
         voosTabelados.put(new OrigemDestino(voo3), voo3);
@@ -61,6 +62,7 @@ public class Server {
         voosTabelados.put(new OrigemDestino(voo6), voo6);
         voosTabelados.put(new OrigemDestino(voo7), voo7);
         voosTabelados.put(new OrigemDestino(voo8), voo8);
+        voosTabelados.put(new OrigemDestino(voo9), voo9);
         reservas = new DashMap<>();
 
         voosUsados = new DashMap<>();
