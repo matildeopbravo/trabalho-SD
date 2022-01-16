@@ -69,7 +69,7 @@ public class ClientUI {
                 else
                     System.out.println(ANSI_BOLD + "Tem " + replies.size() + " notificação:" + ANSI_RESET);
 
-                for (NotificacaoReply reply : client.getNotificacoes()) {
+                for (NotificacaoReply reply : replies) {
                     System.out.println(" - " + ANSI_BOLD + reply.getMensagem() + ANSI_RESET);
                 }
            }
@@ -120,16 +120,11 @@ public class ClientUI {
         LocalDate dataFin = LocalDate.parse(prettyReadLine("Data Final (D/M/Y) : "), formatter);
 
         try {
-            var res = client.efetuaReserva(List.of(locais.split(",")), dataInit, dataFin);
-            if (res == null) {
-                System.out.println("Reserva Não Pode ser realizada");
-            } else {
-                System.out.println("Reserva Nº " + res.getFirst());
-                System.out.println("Data Selecionada " + res.getSecond());
-            }
+            client.efetuaReserva(List.of(locais.split(",")), dataInit, dataFin);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("Pedido de reserva enviado.");
     }
 
     private void mostraVoo(Set<Voo> voos) {
@@ -222,12 +217,16 @@ public class ClientUI {
     private void listaVoos() throws PermissionDeniedException {
         try {
             List<VooTabelado> l = client.pedeListaVoos();
-            Table<VooTabelado> tabelaVoos = new Table<>();
-            tabelaVoos.addColumn("Origem", VooTabelado::getOrigem);
-            tabelaVoos.addColumn("Destino", VooTabelado::getDestino);
-            tabelaVoos.addColumn("Capacidade", v -> String.valueOf(v.getCapacidade()));
-            tabelaVoos.addItems(l);
-            tabelaVoos.show();
+            if (l == null)
+                System.out.println("Operação apenas permitida após autenticação");
+            else {
+                Table<VooTabelado> tabelaVoos = new Table<>();
+                tabelaVoos.addColumn("Origem", VooTabelado::getOrigem);
+                tabelaVoos.addColumn("Destino", VooTabelado::getDestino);
+                tabelaVoos.addColumn("Capacidade", v -> String.valueOf(v.getCapacidade()));
+                tabelaVoos.addItems(l);
+                tabelaVoos.show();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -237,7 +236,12 @@ public class ClientUI {
         // 1. Pegar em todos os voos desse dia
         // 2. Cancelá-los todos
         String dia = prettyReadLine("Dia a encerrar (D/M/Y)");
-        client.encerraDia(LocalDate.parse(dia, formatter));
+        if (client.encerraDia(LocalDate.parse(dia, formatter))) {
+            System.out.println("Operação realizada com sucesso.");
+        }
+        else {
+            System.out.println("Não foi possível encerrar o dia.");
+        }
     }
 
     private void autenticar() {

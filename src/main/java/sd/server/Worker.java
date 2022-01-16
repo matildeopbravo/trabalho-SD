@@ -4,6 +4,8 @@ import sd.Operation;
 import sd.client.ui.ClientUI;
 import sd.exceptions.NotAdminException;
 import sd.packets.client.ClientPacket;
+import sd.packets.server.ServerReply;
+import sd.packets.server.StatusReply;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -37,44 +39,42 @@ public class Worker implements Runnable {
     public void run() {
         try {
             while(!s.isClosed() && patience > 0) {
+                ClientPacket clientPacket;
                 try {
-                    ClientPacket clientPacket = ClientPacket.deserialize(in);
-                    lockOutput();
+                    clientPacket = ClientPacket.deserialize(in);
+                }
+                catch (IOException e) {
+                    return;
+                }
+                lockOutput();
+                try {
                     Operation op = clientPacket.getType();
                     System.out.println("Got operation packet: " + op);
 
                     System.out.println("O user pretende realizer operação: " + op);
-                    if(op.equals(Operation.Login)) {
+                    if (op.equals(Operation.Login)) {
                         user = Operation.autenticaUser(clientPacket, out);
-                        if(user == null ) System.out.println("credenciais invalidas");
+                        if (user == null) System.out.println("credenciais invalidas");
                         else {
                             stopNotificationPusher();
                             startNotificationPusher();
                             System.out.println("User autenticado é " + user);
                         }
-                    }
-                    else {
+                    } else {
                         if (!op.equals(Operation.Registar) && !isAuthenticated()) {
                             System.out.println("Pedido de user não autenticado");
                             //in.skip(in.available());
-                            handleFailure();
+                            handleFailure(clientPacket);
                             continue;
-                        }
-                        else if (op.equals(Operation.LogOut)) {
+                        } else if (op.equals(Operation.LogOut)) {
                             stopNotificationPusher();
                         }
                         callMethodIfPossible(clientPacket);
                     }
                 }
-                catch (ArrayIndexOutOfBoundsException e) {
-                    Reply.InvalidFormat.serialize(out);
-                }
-                catch(IOException e){
-                    return;
-                }
                 catch(NotAdminException e) {
                     System.out.println("Não tem permissão para realizar essa operação");
-                    handleFailure();
+                    handleFailure(clientPacket);
                 }
                 finally {
                     unlockOutput();
@@ -88,8 +88,13 @@ public class Worker implements Runnable {
         }
     }
 
-    private void handleFailure() {
-        Reply.Failure.serialize(out);
+    private void handleFailure(ClientPacket clientPacket) {
+        StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Failure);
+        try {
+            reply.serialize(out);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         patience--;
     }
 
