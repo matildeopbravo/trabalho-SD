@@ -9,13 +9,16 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Worker implements Runnable {
     private int patience ;
     private ServerUser user;
-    private Socket s ;
+    private final Socket s ;
     private DataInputStream in ;
     private DataOutputStream out ;
+    private final ReentrantLock outputLock;
+    private Thread notificationPusher;
 
     public Worker(Socket s) {
         this.s = s;
@@ -27,6 +30,8 @@ public class Worker implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        this.outputLock = new ReentrantLock();
+        notificationPusher = null;
     }
 
     public void run() {
@@ -34,6 +39,7 @@ public class Worker implements Runnable {
             while(!s.isClosed() && patience > 0) {
                 try {
                     ClientPacket clientPacket = ClientPacket.deserialize(in);
+                    lockOutput();
                     Operation op = clientPacket.getType();
                     System.out.println("Got operation packet: " + op);
 
@@ -42,6 +48,8 @@ public class Worker implements Runnable {
                         user = Operation.autenticaUser(clientPacket, out);
                         if(user == null ) System.out.println("credenciais invalidas");
                         else {
+                            stopNotificationPusher();
+                            startNotificationPusher();
                             System.out.println("User autenticado é " + user);
                         }
                     }
@@ -51,6 +59,9 @@ public class Worker implements Runnable {
                             //in.skip(in.available());
                             handleFailure();
                             continue;
+                        }
+                        else if (op.equals(Operation.LogOut)) {
+                            stopNotificationPusher();
                         }
                         callMethodIfPossible(clientPacket);
                     }
@@ -64,6 +75,9 @@ public class Worker implements Runnable {
                 catch(NotAdminException e) {
                     System.out.println("Não tem permissão para realizar essa operação");
                     handleFailure();
+                }
+                finally {
+                    unlockOutput();
                 }
             }
         }
@@ -97,6 +111,33 @@ public class Worker implements Runnable {
             s.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public DataOutputStream getOutput() {
+        return out;
+    }
+
+    public void lockOutput() {
+        outputLock.lock();
+    }
+
+    public void unlockOutput() {
+        outputLock.unlock();
+    }
+
+    public void startNotificationPusher() {
+        if (notificationPusher == null) {
+            NotificationPusher pusher = new NotificationPusher(this.user, this);
+            this.notificationPusher = new Thread(pusher);
+            this.notificationPusher.start();
+        }
+    }
+
+    public void stopNotificationPusher() {
+        if (this.notificationPusher != null) {
+            this.notificationPusher.interrupt();
+            this.notificationPusher = null;
         }
     }
 }

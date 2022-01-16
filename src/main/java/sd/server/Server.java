@@ -177,9 +177,7 @@ public class Server {
                 OrigemDestino o = new OrigemDestino(origem, destino);
                 VooTabelado tabelado = voosTabelados.get(o);
                 if (tabelado == null) {
-                    ReservaEfetuadaReply reply =
-                            new ReservaEfetuadaReply(clientPacket.getId(), ServerReply.Status.Failure, -1, null);
-                    reply.serialize(out);
+                    usr.addNotification("Não existem voos que correspondam ao seu percurso.");
                     return;
                 } else {
                     voosPercurso.add(tabelado);
@@ -210,16 +208,12 @@ public class Server {
                 Set<Voo> actualVoos = reservaVoos(voosPercurso, currentDate);
                 Reserva res = new Reserva(usr.getClientUser(), actualVoos);
                 reservas.put(res.getId(), res);
-                ReservaEfetuadaReply reply =
-                        new ReservaEfetuadaReply(clientPacket.getId(), ServerReply.Status.Success, res.getId(), currentDate);
-                reply.serialize(out);
+                usr.addNotification("O seu voo de foi reservado com sucesso (ID de reserva " + res.getId() + ").");
             } else {
-                ReservaEfetuadaReply reply =
-                        new ReservaEfetuadaReply(clientPacket.getId(), ServerReply.Status.Failure, -1, null);
-                reply.serialize(out);
+                usr.addNotification("Os voos a reservar já atingiram a capacidade máxima.");
             }
 
-        } catch (IOException | UnexpectedPacketTypeException e) {
+        } catch (UnexpectedPacketTypeException e) {
             e.printStackTrace();
         }
     }
@@ -260,7 +254,27 @@ public class Server {
     }
 
     public static void encerraDia(ServerUser usr, ClientPacket clientPacket, DataOutputStream out) {
-        // TODO
+        try {
+            if (!clientPacket.getType().equals(Operation.Encerramento)) {
+                throw new UnexpectedPacketTypeException();
+            }
+            EncerramentoPacket packet = (EncerramentoPacket) clientPacket;
+            LocalDate data = packet.getDate();
+            for (Reserva reserva: reservas.values()) {
+                if (reserva.getVoos().stream().anyMatch(v -> v.getData().equals(data))) {
+                    reservas.remove(reserva.getId());
+                    ServerUser user = users.get(reserva.getClientUser().getUserName());
+                    user.addNotification("Devido ao encerramento dos voos do dia " + data
+                            + ", a sua reserva (ID " + reserva.getId() + ") foi cancelada.");
+                }
+            }
+            voosUsados.remove(data);
+            StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Success);
+            reply.serialize(out);
+        }
+        catch (IOException | UnexpectedPacketTypeException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void listaVoos(ServerUser usr, ClientPacket clientPacket, DataOutputStream out) {

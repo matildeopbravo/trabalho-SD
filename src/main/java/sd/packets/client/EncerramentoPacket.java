@@ -10,6 +10,10 @@ import java.time.LocalDate;
 public class EncerramentoPacket extends ClientPacket {
     private final LocalDate date;
 
+    public LocalDate getDate () {
+        return date;
+    }
+
     public EncerramentoPacket(LocalDate date) {
         super();
         this.date = date;
