@@ -2,6 +2,7 @@ package sd.client.ui;
 
 import sd.client.Client;
 import sd.exceptions.PermissionDeniedException;
+import sd.packets.server.NotificacaoReply;
 import sd.packets.server.ServerReply;
 import sd.server.Reserva;
 import sd.server.Voo;
@@ -58,6 +59,21 @@ public class ClientUI {
                 "Adiciona Voo",
                 "Encerra Dia",
                 "Percursos Possíveis",
+        });
+
+        menu.setPreShowHook(() -> {
+            List<NotificacaoReply> replies = client.getNotificacoes();
+            if (replies.size() > 0) {
+                if (replies.size() > 1)
+                    System.out.println(ANSI_BOLD + "Tem " + replies.size() + " notificações:" + ANSI_RESET);
+                else
+                    System.out.println(ANSI_BOLD + "Tem " + replies.size() + " notificação:" + ANSI_RESET);
+
+                for (NotificacaoReply reply : client.getNotificacoes()) {
+                    // TODO: Mostrar isto direito
+                    System.out.println(reply.toString());
+                }
+           }
         });
 
         // isto deixa na mesma executar a acao, so fica a vermelho se nao satisfizer a condicao

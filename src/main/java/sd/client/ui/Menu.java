@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.*;
 
 public class Menu {
-
     // Interfaces auxiliares
 
     /**
@@ -33,6 +32,7 @@ public class Menu {
     private List<String> opcoes;            // Lista de opções
     private List<PreCondition> disponivel;  // Lista de pré-condições
     private List<Handler> handlers;         // Lista de handlers
+    private Handler preShowHook;
 
     // Construtor
 
@@ -118,6 +118,14 @@ public class Menu {
         int op;
 
         do {
+            if (this.preShowHook != null) {
+                try {
+                    this.preShowHook.execute();
+                } catch (PermissionDeniedException e) {
+                    e.printStackTrace();
+                }
+            }
+
             if (c.isAutenticado()) {
                 System.out.println(ClientUI.ANSI_BOLD + "User " + c.getUserAutenticado().getUserName()
                         + " autenticado" + ClientUI.ANSI_RESET);
@@ -172,6 +180,14 @@ public class Menu {
      */
     public void setHandler(int i, Handler h) {
         this.handlers.set(i - 1, h);
+    }
+
+    /**
+     * Método para registar um handler que irá correr sempre que o menu for mostrado
+     * @param h método a executar
+     */
+    public void setPreShowHook(Handler h) {
+        this.preShowHook = h;
     }
 
     // Métodos auxiliares
