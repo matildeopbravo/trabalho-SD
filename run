@@ -2,11 +2,15 @@
 
 client="mvn compile exec:java -Dexec.mainClass=\"sd.client.Main\""
 server="mvn compile exec:java -Dexec.mainClass=\"sd.server.Main\""
+test="mvn compile exec:java -Dexec.mainClass=\"sd.test.Main\""
 args="${*:2}"
 if [ "$1" == "server" ]; then
-     eval "$server" "$args"
+    eval "$server" "$args"
 elif [ "$1" == "client" ]; then
-     eval "$client" "$args"
+    eval "$client" "$args"
+elif [ "$1" == "test" ]; then
+    tmux new-session "$server; read" \; split-window -h "sleep 2s; $test" \;
 else
+    export MAVEN_OPTS="-ea"
     tmux new-session "$server; read" \; split-window -h "sleep 2s; $client" \;
 fi
