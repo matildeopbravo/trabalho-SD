@@ -115,7 +115,9 @@ public class ServerUser {
             while (pendingNotifications.isEmpty()) {
                 try {
                     notificationsCondition.await();
-                } catch (InterruptedException ignored) { }
+                } catch (InterruptedException ignored) {
+                    return null;
+                }
             }
             notification = pendingNotifications.remove(0);
         }

@@ -19,6 +19,8 @@ public class NotificationPusher implements Runnable{
     public void run() {
         while (true) {
             String notification = serverUser.takeNotification();
+            if (notification == null)
+                return;
             worker.lockOutput();
             try {
                 DataOutputStream out = worker.getOutput();
