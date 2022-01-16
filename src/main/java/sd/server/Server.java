@@ -100,12 +100,12 @@ public class Server {
                 ClientUser us = new ClientUser(registarPacket.getUsername(), registarPacket.getPassword());
                 System.out.println("User: " + us.getUserName() + " password: " + us.getPassword());
                 ServerUser su = new ServerUser(us);
-                ServerUser registedUser = users.putIfAbsent(su.getUserName(),su);
+                ServerUser registedUser = users.putIfAbsent(su.getUserName(), su);
 
-                ServerReply.Status status =  ServerReply.Status.Success;
-                if(registedUser != null){
+                ServerReply.Status status = ServerReply.Status.Success;
+                if (registedUser != null) {
                     System.out.println("Uitlizador já existe");
-                    status =  ServerReply.Status.Failure;
+                    status = ServerReply.Status.Failure;
                 }
                 StatusReply reply = new StatusReply(clientPacket.getId(), status);
                 reply.serialize(out);
@@ -113,14 +113,13 @@ public class Server {
                 StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.InvalidFormat);
                 reply.serialize(out);
             }
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             ex.printStackTrace();
         }
     }
 
     public static ServerUser autenticaUser(ClientPacket clientPacket, DataOutputStream out) {
-        ServerUser serverUser = null;
+        ServerUser serverUser;
         try {
             if (!clientPacket.getType().equals(Operation.Login))
                 throw new UnexpectedPacketTypeException();
@@ -128,12 +127,11 @@ public class Server {
             ClientUser clientUser = new ClientUser(loginPacket.getUsername(), loginPacket.getPassword());
 
             serverUser = users.get(clientUser.getUserName());
-            if(serverUser == null || serverUser.isAuthenticated()) {
+            if (serverUser == null || serverUser.isAuthenticated() || !serverUser.getPassword().equals(clientUser.getPassword())) {
                 StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Failure);
                 reply.serialize(out);
                 return null;
-            }
-            if (serverUser.getPassword().equals(clientUser.getPassword())) {
+            } else {
                 TipoUserAutenticadoReply reply = new TipoUserAutenticadoReply(clientPacket.getId(), ServerReply.Status.Success,
                         serverUser.isAdmin());
                 reply.serialize(out);
@@ -176,13 +174,13 @@ public class Server {
                     voosPercurso.add(tabelado);
                 }
             }
-            LocalDate currentDate ;
+            LocalDate currentDate;
             diasEncerradosLock.readLock().lock();
             boolean allAvailable = false;
             var lockedVoos = new HashSet<Voo>();
-            DashMap<VooTabelado,Voo> todosData = null;
-            for (currentDate = ini ; !currentDate.isAfter(fi) ; currentDate = currentDate.plusDays(1)) {
-                if(!diasEncerrados.contains(currentDate)) {
+            DashMap<VooTabelado, Voo> todosData = null;
+            for (currentDate = ini; !currentDate.isAfter(fi); currentDate = currentDate.plusDays(1)) {
+                if (!diasEncerrados.contains(currentDate)) {
                     allAvailable = true;
                     lockedVoos.clear();
                     todosData = voosUsados.computeIfAbsent(currentDate, x -> new DashMap<>());
@@ -202,8 +200,7 @@ public class Server {
                     }
                     if (allAvailable) {
                         break;
-                    }
-                    else {
+                    } else {
                         todosData.unlock();
                         lockedVoos.forEach(Voo::unlock);
                     }
@@ -211,7 +208,7 @@ public class Server {
             }
 
             if (allAvailable) {
-                var actualVoos =  new HashSet<Voo>();
+                var actualVoos = new HashSet<Voo>();
 
                 for (var tabelado : voosPercurso) {
                     Voo v = todosData.get(tabelado);
@@ -227,8 +224,7 @@ public class Server {
                 Reserva res = new Reserva(usr.getClientUser(), actualVoos);
                 reservas.put(res.getId(), res);
                 usr.addNotification("Os seus voos foram reservados com sucesso (ID da reserva " + res.getId() + ").");
-            }
-            else {
+            } else {
                 usr.addNotification("Não foi possível reservar os voos para os dias indicados.");
             }
             diasEncerradosLock.readLock().unlock();
@@ -257,8 +253,7 @@ public class Server {
                     diaJaEstavaEncerrado = false;
                     diasEncerrados.add(data);
                 }
-            }
-            finally {
+            } finally {
                 diasEncerradosLock.writeLock().unlock();
             }
 
@@ -274,19 +269,18 @@ public class Server {
                 voosUsados.remove(data);
                 StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Success);
                 reply.serialize(out);
-            }
-            else {
+            } else {
                 StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Failure);
                 reply.serialize(out);
             }
-        }
-        catch (IOException | UnexpectedPacketTypeException e) {
+        } catch (IOException | UnexpectedPacketTypeException e) {
             e.printStackTrace();
         }
     }
+
     public static void listaVoos(ServerUser usr, ClientPacket clientPacket, DataOutputStream out) {
         try {
-            List<VooTabelado> voos = (List<VooTabelado>) voosTabelados.values( v -> v);
+            List<VooTabelado> voos = (List<VooTabelado>) voosTabelados.values(v -> v);
             ListaVoosReply reply =
                     new ListaVoosReply(clientPacket.getId(), ServerReply.Status.Success, voos);
             reply.serialize(out);
@@ -330,8 +324,7 @@ public class Server {
                 reply.serialize(out);
                 e.printStackTrace();
             }
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             ex.printStackTrace();
         }
 
@@ -368,7 +361,7 @@ public class Server {
     private static List<List<String>> percursosPossiveis(String origem, String destino, int limiteVoos) {
         List<List<String>> percursos = new ArrayList<>();
 
-        for (VooTabelado voo : voosTabelados.values(v->v)) {
+        for (VooTabelado voo : voosTabelados.values(v -> v)) {
             if (voo.getOrigem().equals(origem)) {
                 if (voo.getDestino().equals(destino))
                     percursos.add(new ArrayList<>(Arrays.asList(origem, destino)));
@@ -399,8 +392,7 @@ public class Server {
                 StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Failure);
                 reply.serialize(out);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

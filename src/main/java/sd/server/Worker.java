@@ -14,11 +14,11 @@ import java.net.Socket;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Worker implements Runnable {
-    private int patience ;
+    private int patience;
     private ServerUser user;
-    private final Socket s ;
-    private DataInputStream in ;
-    private DataOutputStream out ;
+    private final Socket s;
+    private DataInputStream in;
+    private DataOutputStream out;
     private final ReentrantLock outputLock;
     private Thread notificationPusher;
 
@@ -38,12 +38,12 @@ public class Worker implements Runnable {
 
     public void run() {
         try {
-            while(!s.isClosed() && patience > 0) {
+            while (!s.isClosed() && patience > 0) {
                 ClientPacket clientPacket;
                 try {
+                    System.out.println("Waiting for next packet...");
                     clientPacket = ClientPacket.deserialize(in);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     return;
                 }
                 lockOutput();
@@ -53,7 +53,7 @@ public class Worker implements Runnable {
 
                     System.out.println("O user pretende realizer operação: " + op);
                     if (op.equals(Operation.Login)) {
-                        user = Operation.autenticaUser(clientPacket, out);
+                        user = Server.autenticaUser(clientPacket, out);
                         if (user == null) System.out.println("Não é Possível Fazer Login");
                         else {
                             stopNotificationPusher();
@@ -63,26 +63,23 @@ public class Worker implements Runnable {
                     } else {
                         if (!op.equals(Operation.Registar) && !isAuthenticated()) {
                             System.out.println("Pedido de user não autenticado");
-                            //in.skip(in.available());
                             handleFailure(clientPacket);
-                            continue;
-                        } else if (op.equals(Operation.LogOut)) {
-                            stopNotificationPusher();
+                        } else {
+                            if (op.equals(Operation.LogOut)) {
+                                stopNotificationPusher();
+                            }
+                            callMethodIfPossible(clientPacket);
                         }
-                        callMethodIfPossible(clientPacket);
                     }
-                }
-                catch(NotAdminException e) {
+                } catch (NotAdminException e) {
                     System.out.println("Não tem permissão para realizar essa operação");
                     handleFailure(clientPacket);
-                }
-                finally {
+                } finally {
                     unlockOutput();
                 }
             }
-        }
-        finally {
-            System.out.println("Client "   + ClientUI.ANSI_RED + s.getInetAddress().getHostAddress()
+        } finally {
+            System.out.println("Client " + ClientUI.ANSI_RED + s.getInetAddress().getHostAddress()
                     + ClientUI.ANSI_RESET + " disconnected");
             endConnection();
         }
@@ -100,9 +97,9 @@ public class Worker implements Runnable {
 
     private void callMethodIfPossible(ClientPacket clientPacket) throws NotAdminException {
         Operation op = clientPacket.getType();
-        op.callHandleMethod(user,clientPacket,out);
+        op.callHandleMethod(user, clientPacket, out);
         System.out.println("Called Method");
-        if(user != null && !user.isAdmin() && op.isAdminOption()) {
+        if (user != null && !user.isAdmin() && op.isAdminOption()) {
             throw new NotAdminException();
         }
     }
@@ -110,6 +107,7 @@ public class Worker implements Runnable {
     private boolean isAuthenticated() {
         return user != null;
     }
+
     private void endConnection() {
         try {
             s.shutdownOutput();
