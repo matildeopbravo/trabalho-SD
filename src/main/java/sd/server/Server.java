@@ -127,18 +127,20 @@ public class Server {
             ClientUser clientUser = new ClientUser(loginPacket.getUsername(), loginPacket.getPassword());
 
             serverUser = users.get(clientUser.getUserName());
-            if (serverUser == null || serverUser.isAuthenticated() || !serverUser.getPassword().equals(clientUser.getPassword())) {
-                StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Failure);
-                reply.serialize(out);
-                return null;
-            } else {
+
+            if (serverUser != null && serverUser.getPassword().equals(clientUser.getPassword())
+                    && serverUser.setIsAuthenticated(true)){
                 TipoUserAutenticadoReply reply = new TipoUserAutenticadoReply(clientPacket.getId(), ServerReply.Status.Success,
                         serverUser.isAdmin());
                 reply.serialize(out);
-                serverUser.setIsAuthenticated(true);
                 return serverUser;
             }
-        } catch (IOException | UnexpectedPacketTypeException e) {
+            else {
+                StatusReply reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Failure);
+                reply.serialize(out);
+                return null;
+            }
+        } catch (UnexpectedPacketTypeException | IOException e) {
             e.printStackTrace();
         }
         return null;
@@ -295,9 +297,9 @@ public class Server {
                 throw new UnexpectedPacketTypeException();
             CancelaReservaPacket cancelaReservaPacket = (CancelaReservaPacket) clientPacket;
             int id = cancelaReservaPacket.getIdReserva();
-            Reserva r = reservas.remove(id);
+            Reserva r = reservas.removeIf(id, res -> res.getClientUser().equals(usr.getClientUser()));
             StatusReply reply;
-            if (r != null && r.getClientUser().equals(usr.getClientUser())) {
+            if (r != null) {
                 reply = new StatusReply(clientPacket.getId(), ServerReply.Status.Success);
                 r.getVoos().forEach(Voo::aumentaCapacidade);
             } else {

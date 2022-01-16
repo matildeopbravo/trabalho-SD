@@ -3,8 +3,8 @@ package sd.server;
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class DashMap<K,V>  {
@@ -109,6 +109,39 @@ public class DashMap<K,V>  {
     //        lock.readLock().unlock();
     //    }
     //}
+
+    public V removeIf(K key, Predicate<? super V> valueFilter) {
+        try {
+            lock.writeLock().lock();
+            V val = map.get(key);
+            if(val != null && valueFilter.test(val)) {
+                return map.remove(key);
+            }
+            else {
+                return null;
+            }
+        }
+        finally {
+            lock.writeLock().unlock();
+        }
+    }
+    public V removeIf(Predicate<? super Map.Entry<K,V>> filter) {
+        try {
+            lock.writeLock().lock();
+            Optional<Map.Entry<K, V>> r = map.entrySet().stream().filter(filter).findAny();
+            if(r.isPresent()) {
+                var entry = r.get();
+                map.remove(entry.getKey());
+                return entry.getValue();
+            }
+            else {
+                return null;
+            }
+        }
+        finally {
+            lock.writeLock().unlock();
+        }
+    }
 
     public Collection<V> values(Function<? super V, V> cloneFun) {
         try {

@@ -12,8 +12,8 @@ import java.util.Set;
 public class Reserva {
     private static int lastCodigo = -1;
 
-    private int codigoReserva;
-    private ClientUser usr;
+    private final int codigoReserva;
+    private final ClientUser usr;
     private final Set<Voo> voos;
 
     public Reserva(ClientUser usr, Set<Voo> voos) {

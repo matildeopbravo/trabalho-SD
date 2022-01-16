@@ -1,6 +1,5 @@
 package sd.server;
 
-import sd.Connection;
 import sd.client.ClientUser;
 
 import java.io.DataInputStream;
@@ -73,10 +72,12 @@ public class ServerUser {
         return user.getPassword();
     }
 
-    public void  setIsAuthenticated(boolean b) {
+    public boolean setIsAuthenticated(boolean b) {
         try {
             authenticationLock.lock();
-            this.isAuthenticated = b;
+                boolean updated = b != this.isAuthenticated;
+                this.isAuthenticated = b;
+                return updated;
         }
         finally {
             authenticationLock.unlock();
