@@ -1,7 +1,6 @@
 package sd.client.ui;
 
 import sd.client.Client;
-import sd.exceptions.PermissionDeniedException;
 import sd.packets.server.NotificacaoReply;
 import sd.packets.server.ServerReply;
 import sd.server.Reserva;
@@ -65,19 +64,7 @@ public class ClientUI {
                 "Lista de Utilizadores"
         });
 
-        menu.setPreShowHook(() -> {
-            List<NotificacaoReply> replies = client.getNotificacoes();
-            if (replies.size() > 0) {
-                if (replies.size() > 1)
-                    System.out.println(ANSI_BOLD + "Tem " + replies.size() + " notificações:" + ANSI_RESET);
-                else
-                    System.out.println(ANSI_BOLD + "Tem " + replies.size() + " notificação:" + ANSI_RESET);
-
-                for (NotificacaoReply reply : replies) {
-                    System.out.println(" - " + ANSI_BOLD + reply.getMensagem() + ANSI_RESET);
-                }
-           }
-        });
+        menu.setPreShowHook(this::mostraNotificacoes);
 
         // isto deixa na mesma executar a acao, so fica a vermelho se nao satisfizer a condicao
         menu.setPreCondition(2, () -> !client.isAutenticado());
@@ -175,6 +162,7 @@ public class ClientUI {
 
     private void logout() {
         if (client.getUserAutenticado() != null) {
+            mostraNotificacoes();
             ServerReply.Status r = client.fazLogout();
             System.out.println(r);
         } else {
@@ -192,7 +180,11 @@ public class ClientUI {
         if (password) {
             Console console = System.console();
             if (console != null) {
-                return new String(console.readPassword());
+                char[] passwd = console.readPassword();
+                if (passwd == null)
+                    return "";
+                else
+                    return new String(passwd);
             }
         }
         return scin.nextLine();
@@ -286,5 +278,19 @@ public class ClientUI {
             password = prettyReadLine("Password", ANSI_YELLOW, true);
         } while (!client.registaUser(username, password).getStatus().equals(ServerReply.Status.Success));
         System.out.println("Utilizador Registado Com sucesso");
+    }
+
+    private void mostraNotificacoes() {
+        List<NotificacaoReply> replies = client.getNotificacoes();
+        if (replies.size() > 0) {
+            if (replies.size() > 1)
+                System.out.println(ANSI_BOLD + "Tem " + replies.size() + " notificações:" + ANSI_RESET);
+            else
+                System.out.println(ANSI_BOLD + "Tem " + replies.size() + " notificação:" + ANSI_RESET);
+
+            for (NotificacaoReply reply : replies) {
+                System.out.println(" - " + ANSI_BOLD + reply.getMensagem() + ANSI_RESET);
+            }
+        }
     }
 }
