@@ -150,7 +150,7 @@ public class ClientUI {
             e.printStackTrace();
         }
         if (l == null) {
-            System.out.println("Nenhum User Registado");
+            System.out.println("Esta funcionalidade apenas está disponivel para admins");
             return;
         }
         Table<ServerUser> tabelaReservas = new Table<>();

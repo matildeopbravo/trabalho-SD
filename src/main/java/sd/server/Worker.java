@@ -98,11 +98,10 @@ public class Worker implements Runnable {
 
     private void callMethodIfPossible(ClientPacket clientPacket) throws NotAdminException {
         Operation op = clientPacket.getType();
-        op.callHandleMethod(user, clientPacket, out);
-        System.out.println("Called Method");
         if (user != null && !user.isAdmin() && op.isAdminOption()) {
             throw new NotAdminException();
         }
+        op.callHandleMethod(user, clientPacket, out);
     }
 
     private boolean isAuthenticated() {

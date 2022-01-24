@@ -141,8 +141,6 @@ public class Menu {
                     System.out.println("Já se encontra autenticado");
                     continue;
                 }
-                else
-                    System.out.println("O servidor vai dar erro mas podes sempre tentar");
             }
 
             try {
